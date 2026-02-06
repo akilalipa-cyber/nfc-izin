@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>NFC Izin Siswa</title>
+</head>
+<body>
+
+<h2>Scan NFC</h2>
+<button id="scan">Scan Kartu</button>
+<p id="hasil">Belum ada data</p>
+<p id="timer"></p>
+
+<script>
+const hasil = document.getElementById("hasil");
+const timer = document.getElementById("timer");
+
+document.getElementById("scan").onclick = async () => {
+  try {
+    const ndef = new NDEFReader();
+    await ndef.scan();
+
+    ndef.onreading = (event) => {
+      const decoder = new TextDecoder();
+      for (const record of event.message.records) {
+        const data = decoder.decode(record.data);
+        hasil.textContent = data;
+        mulaiCountdown(16);
+      }
+    };
+  } catch (e) {
+    hasil.textContent = "NFC gagal dibaca";
+  }
+};
+
+function mulaiCountdown(menit) {
+  let waktu = menit * 60;
+  const interval = setInterval(() => {
+    const m = Math.floor(waktu / 60);
+    const d = waktu % 60;
+    timer.textContent = `Sisa waktu: ${m}:${d < 10 ? "0" : ""}${d}`;
+    waktu--;
+    if (waktu < 0) {
+      clearInterval(interval);
+      timer.textContent = "WAKTU HABIS";
+    }
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
