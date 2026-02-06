@@ -1,47 +1,10 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>NFC Laporan Sekolah</title>
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-  }
-
-  #timer {
-    font-size: 26px;
-    color: red;
-    margin-top: 10px;
-  }
-
-  #log {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #333;
-    padding: 10px;
-  }
-
-  ul {
-    padding-left: 20px;
-  }
-</style>
-</head>
-<body>
-
-<h2>Scan NFC</h2>
-<button id="scan">SCAN KARTU</button>
-
-<pre id="data">Menunggu NFC...</pre>
-<h2 id="timer">-</h2>
-
-<h3>Daftar Laporan</h3>
-<ul id="log"></ul>
-
 <script>
 let nama = "";
 let kelas = "";
 let interval = null;
+
+// simpan laporan terakhir tiap nama
+const laporanTerakhir = {};
 
 const dataEl = document.getElementById("data");
 const timerEl = document.getElementById("timer");
@@ -65,13 +28,10 @@ document.getElementById("scan").onclick = async () => {
       }
 
       if (!text) {
-        dataEl.textContent = "Data NFC tidak terbaca (bukan Text)";
+        dataEl.textContent = "Data NFC tidak valid";
         return;
       }
 
-      dataEl.textContent = text;
-
-      // reset data
       nama = "";
       kelas = "";
 
@@ -85,11 +45,13 @@ document.getElementById("scan").onclick = async () => {
         return;
       }
 
+      dataEl.textContent = `Terdeteksi: ${nama} (${kelas})`;
+
       if (interval) clearInterval(interval);
-      mulaiCountdownDetik(3);
+      mulaiCountdownDetik(5); // ⬅️ DIGANTI 5 DETIK
     };
   } catch (e) {
-    dataEl.textContent = "NFC gagal dibaca / tidak diizinkan";
+    dataEl.textContent = "NFC gagal dibaca";
   }
 };
 
@@ -106,7 +68,7 @@ function mulaiCountdownDetik(detik) {
       clearInterval(interval);
       timerEl.textContent = "WAKTU HABIS";
       bunyiBeepDuaKali();
-      tambahLog();
+      tambahLogDenganCek();
       sebutkanNama();
     }
   }, 1000);
@@ -132,24 +94,31 @@ function bunyiBeepDuaKali() {
   }
 }
 
-// ===== TAMBAH LAPORAN (TANPA BATAS) =====
-function tambahLog() {
+// ===== LOG DENGAN CEK MELAPOR ULANG =====
+function tambahLogDenganCek() {
+  const sekarang = Date.now();
+  let keterangan = "laporan pertama";
+
+  if (laporanTerakhir[nama]) {
+    const selisih = Math.floor((sekarang - laporanTerakhir[nama]) / 1000);
+    keterangan = `melapor ulang, tepat waktu. Waktu: ${selisih} detik`;
+  }
+
+  laporanTerakhir[nama] = sekarang;
+
   const li = document.createElement("li");
   const jam = new Date().toLocaleTimeString();
 
-  li.textContent = `${jam} - ${nama} (${kelas})`;
+  li.textContent = `${jam} - ${nama} (${kelas}) → ${keterangan}`;
   logEl.prepend(li);
 }
 
 // ===== SEBUTKAN NAMA =====
 function sebutkanNama() {
   const msg = new SpeechSynthesisUtterance(
-    `${nama} kelas ${kelas} silakan`
+    `${nama} kelas ${kelas}, silakan`
   );
   msg.lang = "id-ID";
   speechSynthesis.speak(msg);
 }
 </script>
-
-</body>
-</html>
