@@ -1,44 +1,18 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>NFC Laporan Sekolah</title>
-
-<style>
-  body { font-family: Arial, sans-serif; }
-  #timer { font-size: 26px; color: red; margin-top: 10px; }
-  #log {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #333;
-    padding: 10px;
-  }
-</style>
-</head>
-<body>
-
-<h2>Scan NFC</h2>
-<button id="scan">SCAN KARTU</button>
-
-<pre id="data">Menunggu NFC...</pre>
-<h2 id="timer">-</h2>
-
-<h3>Daftar Laporan</h3>
-<ul id="log"></ul>
-
 <script>
 let nama = "";
 let kelas = "";
 let interval = null;
+
+const BATAS_WAKTU = 5; // detik
 const laporanTerakhir = {};
 
 const dataEl = document.getElementById("data");
 const timerEl = document.getElementById("timer");
 const logEl = document.getElementById("log");
 
-// 🔒 CEK DUKUNGAN NFC
+// CEK NFC
 if (!("NDEFReader" in window)) {
-  dataEl.textContent = "Browser tidak mendukung Web NFC. Gunakan Chrome Android.";
+  dataEl.textContent = "Browser tidak mendukung Web NFC (gunakan Chrome Android)";
   document.getElementById("scan").disabled = true;
 }
 
@@ -60,7 +34,7 @@ document.getElementById("scan").onclick = async () => {
       }
 
       if (!text) {
-        dataEl.textContent = "Data NFC bukan teks";
+        dataEl.textContent = "Data NFC tidak valid";
         return;
       }
 
@@ -80,10 +54,10 @@ document.getElementById("scan").onclick = async () => {
       dataEl.textContent = `Terdeteksi: ${nama} (${kelas})`;
 
       if (interval) clearInterval(interval);
-      mulaiCountdown(5);
+      mulaiCountdown(BATAS_WAKTU);
     };
-  } catch (err) {
-    dataEl.textContent = "Gagal membaca NFC / izin ditolak";
+  } catch {
+    dataEl.textContent = "Gagal membaca NFC";
   }
 };
 
@@ -100,13 +74,13 @@ function mulaiCountdown(detik) {
       clearInterval(interval);
       timerEl.textContent = "WAKTU HABIS";
       beep();
-      tambahLog();
+      prosesLaporan();
       sebutNama();
     }
   }, 1000);
 }
 
-// ===== BEEP 2X =====
+// ===== BEEP 2x =====
 function beep() {
   const ctx = new AudioContext();
   let t = ctx.currentTime;
@@ -120,30 +94,41 @@ function beep() {
   }
 }
 
-// ===== LOG =====
-function tambahLog() {
-  const now = Date.now();
-  let ket = "laporan pertama";
+// ===== LOGIKA TEPAT WAKTU / BOLOS =====
+function prosesLaporan() {
+  const sekarang = Date.now();
+  let status = "LAPORAN PERTAMA";
+  let warna = "black";
+  let catatanWaktu = "-";
 
   if (laporanTerakhir[nama]) {
-    const selisih = Math.floor((now - laporanTerakhir[nama]) / 1000);
-    ket = `melapor ulang, tepat waktu. Waktu: ${selisih} detik`;
+    const selisih = Math.floor((sekarang - laporanTerakhir[nama]) / 1000);
+    catatanWaktu = `${selisih} detik`;
+
+    if (selisih <= BATAS_WAKTU) {
+      status = "TEPAT WAKTU (melapor ulang)";
+    } else {
+      status = "BOLOS";
+      warna = "red";
+    }
   }
 
-  laporanTerakhir[nama] = now;
+  laporanTerakhir[nama] = sekarang;
 
   const li = document.createElement("li");
-  li.textContent = `${new Date().toLocaleTimeString()} - ${nama} (${kelas}) → ${ket}`;
+  li.style.color = warna;
+  li.textContent =
+    `${new Date().toLocaleTimeString()} - ${nama} (${kelas}) → ${status} | Waktu: ${catatanWaktu}`;
+
   logEl.prepend(li);
 }
 
 // ===== SUARA =====
 function sebutNama() {
-  const u = new SpeechSynthesisUtterance(`${nama} kelas ${kelas}`);
+  const u = new SpeechSynthesisUtterance(
+    `${nama} kelas ${kelas}`
+  );
   u.lang = "id-ID";
   speechSynthesis.speak(u);
 }
 </script>
-
-</body>
-</html>
