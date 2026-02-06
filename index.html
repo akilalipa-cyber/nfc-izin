@@ -55,16 +55,23 @@ document.getElementById("scan").onclick = async () => {
     dataEl.textContent = "Tempelkan kartu NFC...";
 
     ndef.onreading = (event) => {
-      const decoder = new TextDecoder();
       let text = "";
 
       for (const record of event.message.records) {
-        text += decoder.decode(record.data) + "\n";
+        if (record.recordType === "text") {
+          const decoder = new TextDecoder(record.encoding);
+          text += decoder.decode(record.data) + "\n";
+        }
+      }
+
+      if (!text) {
+        dataEl.textContent = "Data NFC tidak terbaca (bukan Text)";
+        return;
       }
 
       dataEl.textContent = text;
 
-      // reset
+      // reset data
       nama = "";
       kelas = "";
 
@@ -73,15 +80,20 @@ document.getElementById("scan").onclick = async () => {
         if (line.startsWith("KELAS=")) kelas = line.replace("KELAS=", "").trim();
       });
 
+      if (!nama || !kelas) {
+        dataEl.textContent = "Format NFC salah";
+        return;
+      }
+
       if (interval) clearInterval(interval);
       mulaiCountdownDetik(3);
     };
   } catch (e) {
-    dataEl.textContent = "NFC gagal dibaca";
+    dataEl.textContent = "NFC gagal dibaca / tidak diizinkan";
   }
 };
 
-// ===== COUNTDOWN 3 DETIK =====
+// ===== COUNTDOWN =====
 function mulaiCountdownDetik(detik) {
   let waktu = detik;
   timerEl.textContent = `Sisa waktu: ${waktu} detik`;
@@ -100,7 +112,7 @@ function mulaiCountdownDetik(detik) {
   }, 1000);
 }
 
-// ===== BEEP BEEP 2 KALI =====
+// ===== BEEP 2 KALI =====
 function bunyiBeepDuaKali() {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   let start = audioCtx.currentTime;
@@ -111,3 +123,33 @@ function bunyiBeepDuaKali() {
 
     osc.type = "sine";
     osc.frequency.value = 1000;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(start + i * 0.4);
+    osc.stop(start + i * 0.4 + 0.2);
+  }
+}
+
+// ===== TAMBAH LAPORAN (TANPA BATAS) =====
+function tambahLog() {
+  const li = document.createElement("li");
+  const jam = new Date().toLocaleTimeString();
+
+  li.textContent = `${jam} - ${nama} (${kelas})`;
+  logEl.prepend(li);
+}
+
+// ===== SEBUTKAN NAMA =====
+function sebutkanNama() {
+  const msg = new SpeechSynthesisUtterance(
+    `${nama} kelas ${kelas} silakan`
+  );
+  msg.lang = "id-ID";
+  speechSynthesis.speak(msg);
+}
+</script>
+
+</body>
+</html>
