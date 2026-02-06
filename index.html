@@ -1,112 +1,47 @@
 <script>
-let nama = "";
-let kelas = "";
-let interval = null;
-
-const BATAS_WAKTU = 5; // detik
-const laporanTerakhir = {};
-
 const dataEl = document.getElementById("data");
 const timerEl = document.getElementById("timer");
 const logEl = document.getElementById("log");
+const scanBtn = document.getElementById("scan");
 
-// CEK NFC
-if (!("NDEFReader" in window)) {
-  dataEl.textContent = "Browser tidak mendukung Web NFC (gunakan Chrome Android)";
-  document.getElementById("scan").disabled = true;
-}
+let laporanTerakhir = {};
+const BATAS = 5;
+let interval;
 
-// ===== SCAN NFC =====
-document.getElementById("scan").onclick = async () => {
-  try {
-    const ndef = new NDEFReader();
-    await ndef.scan();
-    dataEl.textContent = "Tempelkan kartu NFC...";
-
-    ndef.onreading = (event) => {
-      let text = "";
-
-      for (const record of event.message.records) {
-        if (record.recordType === "text") {
-          const decoder = new TextDecoder(record.encoding);
-          text += decoder.decode(record.data) + "\n";
-        }
-      }
-
-      if (!text) {
-        dataEl.textContent = "Data NFC tidak valid";
-        return;
-      }
-
-      nama = "";
-      kelas = "";
-
-      text.split("\n").forEach(line => {
-        if (line.startsWith("NAMA=")) nama = line.replace("NAMA=", "").trim();
-        if (line.startsWith("KELAS=")) kelas = line.replace("KELAS=", "").trim();
-      });
-
-      if (!nama || !kelas) {
-        dataEl.textContent = "Format NFC salah";
-        return;
-      }
-
-      dataEl.textContent = `Terdeteksi: ${nama} (${kelas})`;
-
-      if (interval) clearInterval(interval);
-      mulaiCountdown(BATAS_WAKTU);
-    };
-  } catch {
-    dataEl.textContent = "Gagal membaca NFC";
-  }
+scanBtn.onclick = () => {
+  dataEl.textContent = "NFC terdeteksi (SIMULASI)";
+  proses("Tuan", "XI IPA");
 };
 
-// ===== COUNTDOWN =====
-function mulaiCountdown(detik) {
-  let sisa = detik;
+function proses(nama, kelas) {
+  let sisa = BATAS;
   timerEl.textContent = `Sisa waktu: ${sisa} detik`;
 
+  clearInterval(interval);
   interval = setInterval(() => {
     sisa--;
     timerEl.textContent = `Sisa waktu: ${sisa} detik`;
 
-    if (sisa <= 0) {
+    if (sisa === 0) {
       clearInterval(interval);
       timerEl.textContent = "WAKTU HABIS";
+      laporan(nama, kelas);
       beep();
-      prosesLaporan();
-      sebutNama();
     }
   }, 1000);
 }
 
-// ===== BEEP 2x =====
-function beep() {
-  const ctx = new AudioContext();
-  let t = ctx.currentTime;
-
-  for (let i = 0; i < 2; i++) {
-    const o = ctx.createOscillator();
-    o.frequency.value = 1000;
-    o.connect(ctx.destination);
-    o.start(t + i * 0.4);
-    o.stop(t + i * 0.4 + 0.2);
-  }
-}
-
-// ===== LOGIKA TEPAT WAKTU / BOLOS =====
-function prosesLaporan() {
+function laporan(nama, kelas) {
   const sekarang = Date.now();
   let status = "LAPORAN PERTAMA";
   let warna = "black";
-  let catatanWaktu = "-";
+  let catatan = "-";
 
   if (laporanTerakhir[nama]) {
-    const selisih = Math.floor((sekarang - laporanTerakhir[nama]) / 1000);
-    catatanWaktu = `${selisih} detik`;
-
-    if (selisih <= BATAS_WAKTU) {
-      status = "TEPAT WAKTU (melapor ulang)";
+    let selisih = Math.floor((sekarang - laporanTerakhir[nama]) / 1000);
+    catatan = selisih + " detik";
+    if (selisih <= BATAS) {
+      status = "TEPAT WAKTU";
     } else {
       status = "BOLOS";
       warna = "red";
@@ -117,18 +52,18 @@ function prosesLaporan() {
 
   const li = document.createElement("li");
   li.style.color = warna;
-  li.textContent =
-    `${new Date().toLocaleTimeString()} - ${nama} (${kelas}) → ${status} | Waktu: ${catatanWaktu}`;
-
+  li.textContent = `${nama} (${kelas}) → ${status} | ${catatan}`;
   logEl.prepend(li);
 }
 
-// ===== SUARA =====
-function sebutNama() {
-  const u = new SpeechSynthesisUtterance(
-    `${nama} kelas ${kelas}`
-  );
-  u.lang = "id-ID";
-  speechSynthesis.speak(u);
+function beep() {
+  const ctx = new AudioContext();
+  for (let i = 0; i < 2; i++) {
+    const o = ctx.createOscillator();
+    o.frequency.value = 1000;
+    o.connect(ctx.destination);
+    o.start(ctx.currentTime + i * 0.3);
+    o.stop(ctx.currentTime + i * 0.3 + 0.2);
+  }
 }
 </script>
