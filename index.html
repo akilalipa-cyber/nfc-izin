@@ -2,155 +2,156 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>NFC Laporan Sekolah</title>
+<title>Sistem Laporan NFC</title>
 
 <style>
-  body { font-family: Arial, sans-serif; }
-  #timer { font-size: 26px; color: red; margin-top: 10px; }
-  #log {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #333;
-    padding: 10px;
-  }
+body { font-family: Arial; }
+#timer { font-size: 24px; color: red; }
+#log {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #000;
+  padding: 10px;
+}
+.merah { color: red; }
+.hijau { color: green; }
 </style>
 </head>
 <body>
 
-<h2>Scan NFC</h2>
-<button id="scan">SCAN KARTU</button>
+<h2>Sistem Laporan NFC</h2>
 
-<pre id="data">Menunggu NFC...</pre>
-<h2 id="timer">-</h2>
+<button id="scanKeluar">SCAN LAPORAN KELUAR</button>
+<button id="scanMasuk">SCAN LAPORAN MASUK</button>
+
+<pre id="info">Menunggu NFC...</pre>
+<h3 id="timer">-</h3>
 
 <h3>Daftar Laporan</h3>
 <ul id="log"></ul>
 
 <script>
-let nama = "";
-let kelas = "";
+const BATAS = 5; // detik
 let interval = null;
+let mode = ""; // keluar / masuk
 
-const BATAS_WAKTU = 5; // detik
-const laporanTerakhir = {};
+const laporanKeluar = {}; // {nama: waktu}
+const info = document.getElementById("info");
+const timer = document.getElementById("timer");
+const log = document.getElementById("log");
 
-const dataEl = document.getElementById("data");
-const timerEl = document.getElementById("timer");
-const logEl = document.getElementById("log");
-
-// 🔒 CEK NFC
+// ===== CEK NFC =====
 if (!("NDEFReader" in window)) {
-  dataEl.textContent = "Browser tidak mendukung Web NFC. Gunakan Chrome Android.";
-  document.getElementById("scan").disabled = true;
+  info.textContent = "Web NFC tidak didukung. Gunakan Chrome Android.";
 }
 
-// ===== SCAN NFC =====
-document.getElementById("scan").onclick = async () => {
+// ===== TOMBOL =====
+document.getElementById("scanKeluar").onclick = () => mulaiScan("keluar");
+document.getElementById("scanMasuk").onclick = () => mulaiScan("masuk");
+
+// ===== SCAN =====
+async function mulaiScan(jenis) {
+  mode = jenis;
   try {
     const ndef = new NDEFReader();
     await ndef.scan();
-    dataEl.textContent = "Tempelkan kartu NFC...";
+    info.textContent = `Scan untuk laporan ${jenis.toUpperCase()}...`;
 
-    ndef.onreading = (event) => {
+    ndef.onreading = (e) => {
       let text = "";
-
-      for (const record of event.message.records) {
-        if (record.recordType === "text") {
-          const decoder = new TextDecoder(record.encoding);
-          text += decoder.decode(record.data) + "\n";
+      for (const r of e.message.records) {
+        if (r.recordType === "text") {
+          text += new TextDecoder(r.encoding).decode(r.data);
         }
       }
 
-      nama = "";
-      kelas = "";
-
-      text.split("\n").forEach(line => {
-        if (line.startsWith("NAMA=")) nama = line.replace("NAMA=", "").trim();
-        if (line.startsWith("KELAS=")) kelas = line.replace("KELAS=", "").trim();
+      let nama="", kelas="";
+      text.split("\n").forEach(l=>{
+        if(l.startsWith("NAMA=")) nama=l.replace("NAMA=","").trim();
+        if(l.startsWith("KELAS=")) kelas=l.replace("KELAS=","").trim();
       });
 
-      if (!nama || !kelas) {
-        dataEl.textContent = "Format NFC salah";
+      if(!nama || !kelas){
+        info.textContent="Format NFC salah";
         return;
       }
 
-      dataEl.textContent = `Terdeteksi: ${nama} (${kelas})`;
-
-      if (interval) clearInterval(interval);
-      mulaiCountdown(BATAS_WAKTU);
+      if(mode==="keluar") laporanKeluarFunc(nama, kelas);
+      if(mode==="masuk") laporanMasukFunc(nama, kelas);
     };
+
   } catch {
-    dataEl.textContent = "Gagal membaca NFC / izin ditolak";
+    info.textContent="Gagal scan NFC";
   }
-};
+}
 
-// ===== COUNTDOWN =====
-function mulaiCountdown(detik) {
-  let sisa = detik;
-  timerEl.textContent = `Sisa waktu: ${sisa} detik`;
+// ===== LAPORAN KELUAR =====
+function laporanKeluarFunc(nama, kelas){
+  laporanKeluar[nama] = Date.now();
+  beep();
+  info.textContent = `${nama} (${kelas}) LAPOR KELUAR`;
+  mulaiTimer();
+  tambahLog(`${nama} (${kelas}) → LAPOR KELUAR`, "hijau");
+}
 
-  interval = setInterval(() => {
+// ===== LAPORAN MASUK =====
+function laporanMasukFunc(nama, kelas){
+  if(!laporanKeluar[nama]){
+    tambahLog(`${nama} (${kelas}) → TIDAK ADA DATA KELUAR`, "merah");
+    return;
+  }
+
+  const selisih = Math.floor((Date.now() - laporanKeluar[nama]) / 1000);
+  let status = "";
+  let warna = "";
+
+  if(selisih <= BATAS){
+    status = `TEPAT WAKTU | ${selisih} detik`;
+    warna = "hijau";
+  } else {
+    status = `BOLOS | ${selisih} detik`;
+    warna = "merah";
+  }
+
+  beep();
+  tambahLog(`${nama} (${kelas}) → LAPOR MASUK → ${status}`, warna);
+  delete laporanKeluar[nama];
+}
+
+// ===== TIMER VISUAL =====
+function mulaiTimer(){
+  let sisa = BATAS;
+  clearInterval(interval);
+  timer.textContent = `Sisa waktu: ${sisa}`;
+  interval = setInterval(()=>{
     sisa--;
-    timerEl.textContent = `Sisa waktu: ${sisa} detik`;
-
-    if (sisa <= 0) {
+    timer.textContent = `Sisa waktu: ${sisa}`;
+    if(sisa<=0){
       clearInterval(interval);
-      timerEl.textContent = "WAKTU HABIS";
-      beep();
-      tambahLog();
-      sebutNama();
+      timer.textContent="WAKTU HABIS";
     }
-  }, 1000);
+  },1000);
 }
 
 // ===== BEEP 2X =====
-function beep() {
-  const ctx = new AudioContext();
-  let t = ctx.currentTime;
-
-  for (let i = 0; i < 2; i++) {
-    const o = ctx.createOscillator();
-    o.frequency.value = 1000;
+function beep(){
+  const ctx=new AudioContext();
+  let t=ctx.currentTime;
+  for(let i=0;i<2;i++){
+    const o=ctx.createOscillator();
+    o.frequency.value=900;
     o.connect(ctx.destination);
-    o.start(t + i * 0.4);
-    o.stop(t + i * 0.4 + 0.2);
+    o.start(t+i*0.35);
+    o.stop(t+i*0.35+0.2);
   }
 }
 
-// ===== LOGIKA TEPAT WAKTU / BOLOS =====
-function tambahLog() {
-  const sekarang = Date.now();
-  let status = "LAPORAN PERTAMA";
-  let warna = "black";
-  let catatanWaktu = "-";
-
-  if (laporanTerakhir[nama]) {
-    const selisih = Math.floor((sekarang - laporanTerakhir[nama]) / 1000);
-    catatanWaktu = `${selisih} detik`;
-
-    if (selisih <= BATAS_WAKTU) {
-      status = "TEPAT WAKTU (melapor ulang)";
-    } else {
-      status = "BOLOS";
-      warna = "red";
-    }
-  }
-
-  laporanTerakhir[nama] = sekarang;
-
-  const li = document.createElement("li");
-  li.style.color = warna;
-  li.textContent =
-    `${new Date().toLocaleTimeString()} - ${nama} (${kelas}) → ${status} | Waktu: ${catatanWaktu}`;
-
-  logEl.prepend(li);
-}
-
-// ===== SUARA =====
-function sebutNama() {
-  const u = new SpeechSynthesisUtterance(`${nama} kelas ${kelas}`);
-  u.lang = "id-ID";
-  speechSynthesis.speak(u);
+// ===== LOG =====
+function tambahLog(text,warna){
+  const li=document.createElement("li");
+  li.className=warna;
+  li.textContent=`${new Date().toLocaleTimeString()} - ${text}`;
+  log.prepend(li);
 }
 </script>
 
