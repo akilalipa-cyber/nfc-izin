@@ -1,52 +1,56 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>NFC Izin Siswa</title>
-</head>
-<body>
-
-<h2>Scan NFC</h2>
-<button id="scan">Scan Kartu</button>
-<p id="hasil">Belum ada data</p>
-<p id="timer"></p>
-
 <script>
-const hasil = document.getElementById("hasil");
-const timer = document.getElementById("timer");
+let nama = "";
+let kelas = "";
 
 document.getElementById("scan").onclick = async () => {
   try {
     const ndef = new NDEFReader();
     await ndef.scan();
+    document.getElementById("data").textContent = "Tempelkan kartu NFC...";
 
-    ndef.onreading = (event) => {
+    ndef.onreading = event => {
       const decoder = new TextDecoder();
+      let text = "";
+
       for (const record of event.message.records) {
-        const data = decoder.decode(record.data);
-        hasil.textContent = data;
-        mulaiCountdown(16);
+        text += decoder.decode(record.data);
       }
+
+      document.getElementById("data").textContent = text;
+
+      text.split("\n").forEach(line => {
+        if (line.startsWith("NAMA=")) nama = line.replace("NAMA=", "");
+        if (line.startsWith("KELAS=")) kelas = line.replace("KELAS=", "");
+      });
+
+      mulaiCountdownDetik(3);
     };
   } catch (e) {
-    hasil.textContent = "NFC gagal dibaca";
+    document.getElementById("data").textContent = "NFC gagal dibaca";
   }
 };
 
-function mulaiCountdown(menit) {
-  let waktu = menit * 60;
+function mulaiCountdownDetik(detik) {
+  let waktu = detik;
+  const timer = document.getElementById("timer");
+
   const interval = setInterval(() => {
-    const m = Math.floor(waktu / 60);
-    const d = waktu % 60;
-    timer.textContent = `Sisa waktu: ${m}:${d < 10 ? "0" : ""}${d}`;
+    timer.textContent = `Sisa waktu: ${waktu} detik`;
     waktu--;
+
     if (waktu < 0) {
       clearInterval(interval);
       timer.textContent = "WAKTU HABIS";
+      sebutkanNama();
     }
   }, 1000);
 }
-</script>
 
-</body>
-</html>
+function sebutkanNama() {
+  const suara = new SpeechSynthesisUtterance(
+    `Waktu habis. ${nama}. Kelas ${kelas}`
+  );
+  suara.lang = "id-ID";
+  speechSynthesis.speak(suara);
+}
+</script>
