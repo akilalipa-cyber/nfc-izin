@@ -1,51 +1,41 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>NFC Izin Siswa</title>
+  <meta charset="utf-8">
+  <title>NFC Test</title>
 </head>
 <body>
 
-<h2>Scan NFC</h2>
-<button id="scan">Scan Kartu</button>
-<p id="hasil">Belum ada data</p>
-<p id="timer"></p>
+<button id="btn">SCAN NFC</button>
+<pre id="out">Menunggu...</pre>
 
 <script>
-const hasil = document.getElementById("hasil");
-const timer = document.getElementById("timer");
+const out = document.getElementById("out");
 
-document.getElementById("scan").onclick = async () => {
-  try {
-    const ndef = new NDEFReader();
-    await ndef.scan();
-
-    ndef.onreading = (event) => {
-      const decoder = new TextDecoder();
-      for (const record of event.message.records) {
-        const data = decoder.decode(record.data);
-        hasil.textContent = data;
-        mulaiCountdown(16);
-      }
-    };
-  } catch (e) {
-    hasil.textContent = "NFC gagal dibaca";
+document.getElementById("btn").addEventListener("click", async () => {
+  if (!("NDEFReader" in window)) {
+    out.textContent = "Browser tidak mendukung NFC";
+    return;
   }
-};
 
-function mulaiCountdown(menit) {
-  let waktu = menit * 60;
-  const interval = setInterval(() => {
-    const m = Math.floor(waktu / 60);
-    const d = waktu % 60;
-    timer.textContent = `Sisa waktu: ${m}:${d < 10 ? "0" : ""}${d}`;
-    waktu--;
-    if (waktu < 0) {
-      clearInterval(interval);
-      timer.textContent = "WAKTU HABIS";
-    }
-  }, 1000);
-}
+  try {
+    const reader = new NDEFReader();
+    await reader.scan();
+    out.textContent = "Tempelkan kartu NFC...";
+
+    reader.onreading = e => {
+      let text = "";
+      const decoder = new TextDecoder();
+      for (const record of e.message.records) {
+        text += decoder.decode(record.data) + "\n";
+      }
+      out.textContent = text;
+    };
+
+  } catch (err) {
+    out.textContent = "Error: " + err;
+  }
+});
 </script>
 
 </body>
