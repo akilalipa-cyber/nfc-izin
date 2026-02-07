@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Operator Gerbang NFC</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f4f4;
+}
+button {
+  padding: 10px 15px;
+  font-size: 16px;
+}
+#status {
+  margin-top: 10px;
+  font-weight: bold;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: white;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+.bolos {
+  color: red;
+  font-weight: bold;
+}
+.tepat {
+  color: green;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>WEB OPERATOR ABSENSI NFC</h2>
+
+<button id="scan">SCAN KARTU</button>
+<div id="status">Menunggu scan...</div>
+
+<table>
+<thead>
+<tr>
+  <th>Waktu</th>
+  <th>Nama</th>
+  <th>Kelas</th>
+  <th>Status</th>
+  <th>Keterangan</th>
+</tr>
+</thead>
+<tbody id="log"></tbody>
+</table>
+
+<script>
+const IZIN_WAKTU = 5 * 60; // 5 menit (detik)
+let scanLock = false;
+const dataSiswa = {};
+
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+
+if (!("NDEFReader" in window)) {
+  statusEl.textContent = "Web NFC tidak didukung. Gunakan Chrome Android.";
+  document.getElementById("scan").disabled = true;
+}
+
+document.getElementById("scan").onclick = async () => {
+  const ndef = new NDEFReader();
+  await ndef.scan();
+  statusEl.textContent = "Tempelkan kartu...";
+
+  ndef.onreading = (e) => {
+    if (scanLock) return;
+    scanLock = true;
+    setTimeout(() => scanLock = false, 3000);
+
+    let text = "";
+    for (const r of e.message.records) {
+      const dec = new TextDecoder();
+      text += dec.decode(r.data);
+    }
+
+    let nama = "", kelas = "";
+    text.split("\n").forEach(l => {
+      if (l.startsWith("NAMA=")) nama = l.replace("NAMA=", "").trim();
+      if (l.startsWith("KELAS=")) kelas = l.replace("KELAS=", "").trim();
+    });
+
+    if (!nama || !kelas) {
+      statusEl.textContent = "Data kartu tidak valid";
+      return;
+    }
+
+    proses(nama, kelas);
+  };
+};
+
+function proses(nama, kelas) {
+  const now = Date.now();
+  const waktu = new Date().toLocaleTimeString();
+
+  if (!dataSiswa[nama]) {
+    // LAPOR KELUAR
+    dataSiswa[nama] = { keluar: now };
+    tambahLog(waktu, nama, kelas, "LAPOR KELUAR", "-", "");
+    statusEl.textContent = `${nama} keluar`;
+    return;
+  }
+
+  if (dataSiswa[nama].masuk) {
+    statusEl.textContent = `${nama} sudah selesai`;
+    return;
+  }
+
+  // LAPOR MASUK
+  const selisih = Math.floor((now - dataSiswa[nama].keluar) / 1000);
+  let status = "", ket = "";
+
+  if (selisih <= IZIN_WAKTU) {
+    status = "TEPAT WAKTU";
+    ket = `+${IZIN_WAKTU - selisih} detik`;
+  } else {
+    status = "BOLOS";
+    ket = `-${selisih - IZIN_WAKTU} detik`;
+  }
+
+  dataSiswa[nama].masuk = now;
+  tambahLog(waktu, nama, kelas, status, ket, status === "BOLOS");
+  statusEl.textContent = `${nama} ${status}`;
+}
+
+function tambahLog(waktu, nama, kelas, status, ket, bolos) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${waktu}</td>
+    <td>${nama}</td>
+    <td>${kelas}</td>
+    <td class="${bolos ? "bolos" : "tepat"}">${status}</td>
+    <td>${ket}</td>
+  `;
+  logEl.prepend(tr);
+}
+</script>
+
+</body>
+</html>
