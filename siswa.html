@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Riwayat Absensi Saya</h2>
+<div id="data"></div>
+
+<script src="data.js"></script>
+<script>
+let user = localStorage.getItem("loginUser");
+let html = "";
+
+absensi
+  .filter(a => a.nama === user.toUpperCase())
+  .forEach(a => {
+    html += `<p>${a.waktu} - ${a.status}</p>`;
+  });
+
+document.getElementById("data").innerHTML = html;
+</script>
+
+</body>
+</html>
