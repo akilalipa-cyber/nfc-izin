@@ -1,22 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>ABSEN KAMU</title>
+<style>
+body { font-family: Arial; }
+.hijau { color: green; }
+.merah { color: red; }
+</style>
+</head>
 <body>
 
-<h2>Riwayat Absensi Saya</h2>
-<div id="data"></div>
+<h2>Dashboard Siswa</h2>
 
-<script src="data.js"></script>
+<input id="nama" placeholder="Nama siswa">
+<button onclick="lihat()">Lihat Absensi</button>
+
+<ul id="hasil"></ul>
+
 <script>
-let user = localStorage.getItem("loginUser");
-let html = "";
+function lihat(){
+  const nama = document.getElementById("nama").value.trim();
+  const hasil = document.getElementById("hasil");
+  hasil.innerHTML = "";
 
-absensi
-  .filter(a => a.nama === user.toUpperCase())
-  .forEach(a => {
-    html += `<p>${a.waktu} - ${a.status}</p>`;
+  const db = JSON.parse(localStorage.getItem("absensi")) || [];
+
+  const data = db.filter(d => d.nama === nama);
+
+  if(data.length === 0){
+    hasil.innerHTML = "<li>Tidak ada data</li>";
+    return;
+  }
+
+  data.forEach(d=>{
+    const li = document.createElement("li");
+    li.className = d.status === "BOLOS" ? "merah" : "hijau";
+    li.textContent =
+      `${d.waktu} | ${d.jenis} | ${d.status}` +
+      (d.keterlambatan ? ` (-${d.keterlambatan} detik)` : "");
+    hasil.appendChild(li);
   });
-
-document.getElementById("data").innerHTML = html;
+}
 </script>
 
 </body>
