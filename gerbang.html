@@ -1,34 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Gerbang NFC</title>
+  <title>Gerbang Scan NFC</title>
+  <style>
+    .tepat { color: green; }
+    .bolos { color: red; }
+  </style>
 </head>
 <body>
 
 <h2>Gerbang Scan NFC</h2>
-<button onclick="scan()">SCAN KARTU</button>
 
-<div id="status"></div>
+<button onclick="scanKeluar()">SCAN KELUAR</button>
+<button onclick="scanMasuk()">SCAN MASUK</button>
 
-<script src="data.js"></script>
+<p id="status"></p>
+
+<h3>Daftar Laporan</h3>
+<div id="log"></div>
+
 <script>
-function scan() {
-  const now = new Date();
-  const waktuMasuk = "18:05";
-  const sekarang = now.getHours() + ":" + now.getMinutes();
+const batasWaktu = 5 * 1000; // 5 detik
+let dataSiswa = {};
 
-  let telat = (now.getMinutes() - 5);
-  let status = telat > 0 ? `TERLAMBAT ${telat} detik` : "TEPAT WAKTU";
-
-  document.getElementById("status").innerHTML = status;
-
-  absensi.push({
-    nama: "AQYL",
-    waktu: sekarang,
-    status: status
-  });
+function waktuSekarang() {
+  return new Date().getTime();
 }
-</script>
 
-</body>
-</html>
+function scanKeluar() {
+  const nama = "AQYL";
+  dataSiswa[nama] = {
+    keluar: waktuSekarang()
+  };
+
+  tampilLog(nama, "LAPOR KELUAR");
+}
+
+function scanMasuk() {
+  const nama = "AQYL";
+
+  if (!dataSiswa[nama] || !dataSiswa[nama].keluar) {
+    tampilLog(nama, "TIDAK ADA DATA KELUAR", true);
+    return;
+  }
+
+  const selisih = waktuSekarang() - dataSiswa[nama].keluar;
+
+  if (selisih <= batasWaktu) {
+    tampilLog(nama, "TEPAT WAKTU", false);
+  }
