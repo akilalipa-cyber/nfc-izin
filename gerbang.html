@@ -1,51 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Gerbang Scan NFC</title>
-  <style>
-    .tepat { color: green; }
-    .bolos { color: red; }
-  </style>
+<meta charset="UTF-8">
+<title>Gerbang Scan NFC</title>
+
+<style>
+body { font-family: Arial; }
+#timer { font-size: 22px; font-weight: bold; }
+#log {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid #000;
+  padding: 10px;
+}
+.hijau { color: green; }
+.merah { color: red; }
+</style>
 </head>
 <body>
 
 <h2>Gerbang Scan NFC</h2>
 
-<button onclick="scanKeluar()">SCAN KELUAR</button>
-<button onclick="scanMasuk()">SCAN MASUK</button>
+<button id="btnKeluar">SCAN KELUAR</button>
+<button id="btnMasuk">SCAN MASUK</button>
 
-<p id="status"></p>
+<p id="status">Siap</p>
+<p id="timer">-</p>
 
 <h3>Daftar Laporan</h3>
-<div id="log"></div>
+<ul id="log"></ul>
 
 <script>
-const batasWaktu = 5 * 1000; // 5 detik
-let dataSiswa = {};
+const BATAS = 5; // detik
+let mode = "";
+let timerInterval = null;
+let ndef = null;
 
-function waktuSekarang() {
-  return new Date().getTime();
+const siswa = {}; // { nama: { kelas, waktuKeluar } }
+
+const statusEl = document.getElementById("status");
+const timerEl = document.getElementById("timer");
+const logEl = document.getElementById("log");
+
+// ===== CEK NFC =====
+if (!("NDEFReader" in window)) {
+  statusEl.textContent = "HP / Browser tidak mendukung NFC (Chrome Android)";
 }
 
-function scanKeluar() {
-  const nama = "AQYL";
-  dataSiswa[nama] = {
-    keluar: waktuSekarang()
+// ===== TOMBOL =====
+document.getElementById("btnKeluar").onclick = () => mulaiScan("keluar");
+document.getElementById("btnMasuk").onclick = () => mulaiScan("masuk");
+
+// ===== SCAN NFC =====
+async function mulaiScan(jenis) {
+  mode = jenis;
+
+  try {
+    if (!ndef) ndef = new NDEFReader();
+
+    await ndef.scan();
+    statusEl.textContent = `Scanning NFC (${jenis.toUpperCase()})... Tempelkan kartu`;
+
+    ndef.onreading = event => {
+      let text = "";
+      for (const record of event.message.records) {
+        if (record.recordType === "text") {
+          text += new TextDecoder(record.encoding).decode(record.data);
+        }
+      }
+
+      let nama="", kelas="";
+      text.split("\n").forEach(l=>{
+        if(l.startsWith("NAMA=")) nama=l.replace("NAMA=","").trim();
+        if(l.startsWith("KELAS=")) kelas=l.replace("KELAS=","").trim();
+      });
+
+      if(!nama || !kelas){
+        statusEl.textContent = "Format NFC salah";
+        return;
+      }
+
+      if(mode==="keluar") laporKeluar(nama, kelas);
+      else laporMasuk(nama, kelas);
+    };
+
+  } catch (err) {
+    statusEl.textContent = "Gagal scan NFC";
+  }
+}
+
+// ===== LAPOR KELUAR =====
+function laporKeluar(nama, kelas){
+  siswa[nama] = {
+    kelas,
+    waktuKeluar: Date.now()
   };
 
-  tampilLog(nama, "LAPOR KELUAR");
+  mulaiTimer();
+  beep();
+
+  statusEl.textContent = `${nama} (${kelas}) → KELUAR`;
+  tambahLog(`${nama} (${kelas}) → LAPOR KELUAR`, "hijau");
 }
 
-function scanMasuk() {
-  const nama = "AQYL";
-
-  if (!dataSiswa[nama] || !dataSiswa[nama].keluar) {
-    tampilLog(nama, "TIDAK ADA DATA KELUAR", true);
+// ===== LAPOR MASUK =====
+function laporMasuk(nama, kelas){
+  if(!siswa[nama]){
+    tambahLog(`${nama} (${kelas}) → TIDAK ADA DATA KELUAR`, "merah");
     return;
   }
 
-  const selisih = waktuSekarang() - dataSiswa[nama].keluar;
+  const now = Date.now();
+  const selisih = Math.floor((now - siswa[nama].waktuKeluar) / 1000);
 
-  if (selisih <= batasWaktu) {
-    tampilLog(nama, "TEPAT WAKTU", false);
+  if(selisih <= BATAS){
+    tambahLog(
+      `${nama} (${kelas}) → LAPOR MASUK → TEPAT WAKTU (+${selisih} detik)`,
+      "hijau"
+    );
+  } else {
+    const minus = selisih - BATAS;
+    tambahLog(
+      `${nama} (${kelas}) → LAPOR MASUK → BOLOS (-${minus} detik)`,
+      "merah"
+    );
   }
+
+  beep();
+  delete siswa[nama];
+}
+
+// ===== TIMER =====
+function mulaiTimer(){
+  clearInterval(timerInterval);
+  let sisa = BATAS;
+  timerEl.textContent = `Sisa waktu: ${sisa} detik`;
+
+  timerInterval = setInterval(()=>{
+    sisa--;
+    if(sisa >= 0){
+      timerEl.textContent = `Sisa waktu: ${sisa} detik`;
+    } else {
+      timerEl.textContent = "WAKTU HABIS";
+      clearInterval(timerInterval);
+    }
+  },1000);
+}
+
+// ===== BEEP 2X =====
+function beep(){
+  const ctx = new AudioContext();
+  let t = ctx.currentTime;
+  for(let i=0;i<2;i++){
+    const o = ctx.createOscillator();
+    o.frequency.value = 900;
+    o.connect(ctx.destination);
+    o.start(t + i*0.35);
+    o.stop(t + i*0.35 + 0.2);
+  }
+}
+
+// ===== LOG =====
+function tambahLog(teks, warna){
+  const li = document.createElement("li");
+  li.className = warna;
+  li.textContent = `${new Date().toLocaleTimeString()} - ${teks}`;
+  logEl.prepend(li);
+}
+</script>
+
+</body>
+</html>
