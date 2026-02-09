@@ -1,56 +1,28 @@
-<script>
-let nama = "";
-let kelas = "";
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login Sistem Absensi NFC</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-document.getElementById("scan").onclick = async () => {
-  try {
-    const ndef = new NDEFReader();
-    await ndef.scan();
-    document.getElementById("data").textContent = "Tempelkan kartu NFC...";
+<h2>Login Sistem Absensi</h2>
 
-    ndef.onreading = event => {
-      const decoder = new TextDecoder();
-      let text = "";
+<select id="role">
+  <option value="">Pilih Akses</option>
+  <option value="gerbang">Gerbang</option>
+  <option value="operator">Operator</option>
+  <option value="wali">Wali Kelas</option>
+  <option value="guru">Guru Mapel</option>
+  <option value="siswa">Siswa</option>
+</select><br><br>
 
-      for (const record of event.message.records) {
-        text += decoder.decode(record.data);
-      }
+<input type="text" id="username" placeholder="Username"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
 
-      document.getElementById("data").textContent = text;
+<button onclick="login()">LOGIN</button>
 
-      text.split("\n").forEach(line => {
-        if (line.startsWith("NAMA=")) nama = line.replace("NAMA=", "");
-        if (line.startsWith("KELAS=")) kelas = line.replace("KELAS=", "");
-      });
-
-      mulaiCountdownDetik(3);
-    };
-  } catch (e) {
-    document.getElementById("data").textContent = "NFC gagal dibaca";
-  }
-};
-
-function mulaiCountdownDetik(detik) {
-  let waktu = detik;
-  const timer = document.getElementById("timer");
-
-  const interval = setInterval(() => {
-    timer.textContent = `Sisa waktu: ${waktu} detik`;
-    waktu--;
-
-    if (waktu < 0) {
-      clearInterval(interval);
-      timer.textContent = "WAKTU HABIS";
-      sebutkanNama();
-    }
-  }, 1000);
-}
-
-function sebutkanNama() {
-  const suara = new SpeechSynthesisUtterance(
-    `Waktu habis. ${nama}. Kelas ${kelas}`
-  );
-  suara.lang = "id-ID";
-  speechSynthesis.speak(suara);
-}
-</script>
+<script src="data.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
