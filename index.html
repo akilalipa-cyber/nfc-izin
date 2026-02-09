@@ -1,28 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Login Sistem Absensi NFC</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Sistem Absensi NFC Sekolah</title>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  margin-top: 100px;
+}
+</style>
 </head>
 <body>
 
-<h2>Login Sistem Absensi</h2>
+<h2>Sistem Absensi NFC Sekolah</h2>
+<p>Memuat sistem...</p>
 
-<select id="role">
-  <option value="">Pilih Akses</option>
-  <option value="gerbang">Gerbang</option>
-  <option value="operator">Operator</option>
-  <option value="wali">Wali Kelas</option>
-  <option value="guru">Guru Mapel</option>
-  <option value="siswa">Siswa</option>
-</select><br><br>
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
 
-<input type="text" id="username" placeholder="Username"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
+if(user){
+  // sudah login, arahkan sesuai role
+  if(user.role === "GERBANG")       location.href = "gerbang.html";
+  else if(user.role === "OPERATOR") location.href = "operator.html";
+  else if(user.role === "WALI")     location.href = "wali.html";
+  else if(user.role === "GURU")     location.href = "guru.html";
+  else if(user.role === "SISWA")    location.href = "siswa.html";
+  else location.href = "login.html";
+}else{
+  // belum login
+  location.href = "login.html";
+}
+</script>
 
-<button onclick="login()">LOGIN</button>
-
-<script src="data.js"></script>
-<script src="auth.js"></script>
 </body>
 </html>
