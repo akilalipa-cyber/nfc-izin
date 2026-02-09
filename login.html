@@ -1,30 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Login Absensi NFC</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Login NFC</title>
+<style>
+body { font-family: Arial; text-align: center; margin-top: 80px; }
+#status { font-size: 20px; margin-top: 20px; }
+</style>
 </head>
 <body>
 
-  <h2>Login Sistem Absensi NFC</h2>
+<h2>LOGIN ABSENSI NFC</h2>
+<button onclick="scan()">SCAN KARTU</button>
+<div id="status">Tempelkan kartu NFC</div>
 
-  <form id="loginForm">
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
+<script>
+function beep(){
+  const ctx = new AudioContext();
+  const o = ctx.createOscillator();
+  o.frequency.value = 900;
+  o.connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.2);
+}
 
-    <select id="role" required>
-      <option value="">Pilih Akses</option>
-      <option value="gerbang">Gerbang</option>
-      <option value="operator">Operator</option>
-      <option value="walikelas">Wali Kelas</option>
-      <option value="gurumapel">Guru Mapel</option>
-      <option value="siswa">Siswa</option>
-    </select>
+async function scan(){
+  if(!("NDEFReader" in window)){
+    status.textContent = "Browser tidak mendukung NFC";
+    return;
+  }
 
-    <button type="submit">Login</button>
-  </form>
+  try{
+    const ndef = new NDEFReader();
+    await ndef.scan();
+    status.textContent = "Membaca kartu...";
 
-  <script src="login.js"></script>
+    ndef.onreading = e => {
+      let text = "";
+      for(const r of e.message.records){
+        if(r.recordType === "text"){
+          text += new TextDecoder(r.encoding).decode(r.data);
+        }
+      }
+
+      let nama="", role="", kelas="";
+      text.split("\n").forEach(l=>{
+        if(l.startsWith("NAMA=")) nama = l.replace("NAMA=","");
+        if(l.startsWith("ROLE=")) role = l.replace("ROLE=","");
+        if(l.startsWith("KELAS=")) kelas = l.replace("KELAS=","");
+      });
+
+      if(!role){
+        status.textContent = "Kartu tidak valid";
+        return;
+      }
+
+      localStorage.setItem("user", JSON.stringify({nama, role, kelas}));
+      beep();
+
+      if(role==="GERBANG") location.href="gerbang.html";
+      else if(role==="OPERATOR") location.href="operator.html";
+      else if(role==="WALI") location.href="wali.html";
+      else if(role==="GURU") location.href="guru.html";
+      else if(role==="SISWA") location.href="siswa.html";
+      else status.textContent="Role tidak dikenal";
+    };
+
+  }catch{
+    status.textContent="Gagal scan NFC";
+  }
+}
+</script>
+
 </body>
 </html>
