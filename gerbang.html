@@ -1,18 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Gerbang</title>
+  <title>Gerbang NFC</title>
 </head>
 <body>
 
-<h2>Halaman Gerbang Absensi</h2>
+<h2>Gerbang Scan NFC</h2>
+<button onclick="scan()">SCAN KARTU</button>
 
+<div id="status"></div>
+
+<script src="data.js"></script>
 <script>
-  const role = sessionStorage.getItem("role");
-  if (role !== "gerbang") {
-    alert("Akses ditolak!");
-    window.location.href = "login.html";
-  }
+function scan() {
+  const now = new Date();
+  const waktuMasuk = "18:05";
+  const sekarang = now.getHours() + ":" + now.getMinutes();
+
+  let telat = (now.getMinutes() - 5);
+  let status = telat > 0 ? `TERLAMBAT ${telat} detik` : "TEPAT WAKTU";
+
+  document.getElementById("status").innerHTML = status;
+
+  absensi.push({
+    nama: "AQYL",
+    waktu: sekarang,
+    status: status
+  });
+}
 </script>
 
 </body>
