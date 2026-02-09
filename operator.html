@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Dashboard Operator</h2>
+<div id="laporan"></div>
+
+<script src="data.js"></script>
+<script>
+let html = "";
+absensi.forEach(a => {
+  html += `<p>${a.nama} - ${a.waktu} - ${a.status}</p>`;
+});
+document.getElementById("laporan").innerHTML = html;
+</script>
+
+</body>
+</html>
