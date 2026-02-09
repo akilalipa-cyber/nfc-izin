@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gerbang</title>
+</head>
+<body>
+
+<h2>Halaman Gerbang Absensi</h2>
+
+<script>
+  const role = sessionStorage.getItem("role");
+  if (role !== "gerbang") {
+    alert("Akses ditolak!");
+    window.location.href = "login.html";
+  }
+</script>
+
+</body>
+</html>
