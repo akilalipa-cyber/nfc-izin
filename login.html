@@ -2,19 +2,28 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Login NFC</title>
+<title>Login NFC Absensi</title>
 <style>
-body { font-family: Arial; text-align: center; margin-top: 80px; }
-#status { font-size: 20px; margin-top: 20px; }
+body {
+  font-family: Arial;
+  text-align: center;
+  margin-top: 80px;
+}
+#status {
+  font-size: 18px;
+  margin-top: 20px;
+}
 </style>
 </head>
 <body>
 
 <h2>LOGIN ABSENSI NFC</h2>
-<button onclick="scan()">SCAN KARTU</button>
+<button id="scan">SCAN KARTU NFC</button>
 <div id="status">Tempelkan kartu NFC</div>
 
 <script>
+const statusEl = document.getElementById("status");
+
 function beep(){
   const ctx = new AudioContext();
   const o = ctx.createOscillator();
@@ -24,52 +33,58 @@ function beep(){
   o.stop(ctx.currentTime + 0.2);
 }
 
-async function scan(){
-  if(!("NDEFReader" in window)){
-    status.textContent = "Browser tidak mendukung NFC";
+document.getElementById("scan").onclick = async () => {
+  if (!("NDEFReader" in window)) {
+    statusEl.textContent = "Browser tidak mendukung NFC (Chrome Android)";
     return;
   }
 
-  try{
+  try {
     const ndef = new NDEFReader();
     await ndef.scan();
-    status.textContent = "Membaca kartu...";
+    statusEl.textContent = "Membaca kartu NFC...";
 
     ndef.onreading = e => {
       let text = "";
-      for(const r of e.message.records){
-        if(r.recordType === "text"){
-          text += new TextDecoder(r.encoding).decode(r.data);
+      for (const r of e.message.records) {
+        if (r.recordType === "text") {
+          text += new TextDecoder(r.encoding).decode(r.data) + "\n";
         }
       }
 
       let nama="", role="", kelas="";
       text.split("\n").forEach(l=>{
-        if(l.startsWith("NAMA=")) nama = l.replace("NAMA=","");
-        if(l.startsWith("ROLE=")) role = l.replace("ROLE=","");
-        if(l.startsWith("KELAS=")) kelas = l.replace("KELAS=","");
+        if(l.startsWith("NAMA="))  nama  = l.replace("NAMA=","").trim();
+        if(l.startsWith("ROLE="))  role  = l.replace("ROLE=","").trim();
+        if(l.startsWith("KELAS=")) kelas = l.replace("KELAS=","").trim();
       });
 
-      if(!role){
-        status.textContent = "Kartu tidak valid";
+      if(!nama || !role){
+        statusEl.textContent = "Data kartu tidak valid";
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify({nama, role, kelas}));
-      beep();
+      // simpan sesi login
+      localStorage.setItem("user", JSON.stringify({
+        nama, role, kelas
+      }));
 
-      if(role==="GERBANG") location.href="gerbang.html";
-      else if(role==="OPERATOR") location.href="operator.html";
-      else if(role==="WALI") location.href="wali.html";
-      else if(role==="GURU") location.href="guru.html";
-      else if(role==="SISWA") location.href="siswa.html";
-      else status.textContent="Role tidak dikenal";
+      beep();
+      statusEl.textContent = `Selamat datang ${nama} (${role})`;
+
+      // arahkan sesuai role
+      if(role === "GERBANG")   location.href = "gerbang.html";
+      else if(role === "OPERATOR") location.href = "operator.html";
+      else if(role === "WALI") location.href = "wali.html";
+      else if(role === "GURU") location.href = "guru.html";
+      else if(role === "SISWA") location.href = "siswa.html";
+      else statusEl.textContent = "Role tidak dikenali";
     };
 
-  }catch{
-    status.textContent="Gagal scan NFC";
+  } catch (err) {
+    statusEl.textContent = "Gagal membaca NFC";
   }
-}
+};
 </script>
 
 </body>
