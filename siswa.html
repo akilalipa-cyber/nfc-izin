@@ -2,47 +2,35 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>ABSEN KAMU</title>
-<style>
-body { font-family: Arial; }
-.hijau { color: green; }
-.merah { color: red; }
-</style>
+<title>Dashboard Siswa</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Dashboard Siswa</h2>
+<div class="header">Dashboard Siswa</div>
 
-<input id="nama" placeholder="Nama siswa">
-<button onclick="lihat()">Lihat Absensi</button>
+<div class="container">
+  <div class="card" id="profil"></div>
+  <div class="card">
+    <h3>Riwayat Keluar Gerbang</h3>
+    <ul id="riwayat"></ul>
+  </div>
+</div>
 
-<ul id="hasil"></ul>
-
+<script src="data.js"></script>
 <script>
-function lihat(){
-  const nama = document.getElementById("nama").value.trim();
-  const hasil = document.getElementById("hasil");
-  hasil.innerHTML = "";
+const user = JSON.parse(localStorage.getItem("user"));
+const profil = document.getElementById("profil");
+const riwayat = document.getElementById("riwayat");
 
-  const db = JSON.parse(localStorage.getItem("absensi")) || [];
+profil.innerHTML = `<b>${user.NAMA}</b><br>${user.KELAS}`;
 
-  const data = db.filter(d => d.nama === nama);
-
-  if(data.length === 0){
-    hasil.innerHTML = "<li>Tidak ada data</li>";
-    return;
-  }
-
-  data.forEach(d=>{
-    const li = document.createElement("li");
-    li.className = d.status === "BOLOS" ? "merah" : "hijau";
-    li.textContent =
-      `${d.waktu} | ${d.jenis} | ${d.status}` +
-      (d.keterlambatan ? ` (-${d.keterlambatan} detik)` : "");
-    hasil.appendChild(li);
-  });
-}
+ambilAbsenSiswa(user.NAMA).forEach(d=>{
+  const li = document.createElement("li");
+  li.className = d.status==="bolos"?"merah":"hijau";
+  li.textContent = `${d.waktu} → ${d.status.toUpperCase()} (${d.selisih}s)`;
+  riwayat.prepend(li);
+});
 </script>
-
 </body>
 </html>
