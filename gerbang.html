@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerbang SCAN</title>
+<title>Gerbang NFC</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -56,7 +56,7 @@ body{background:#f4f6fb;}
 
 <div class="header">
     <h2>SMA-TAS SMAN 1 BIAU</h2>
-    <h1>Gerbang NFC</h1>
+    <h1>Gerbang SCAN</h1>
 </div>
 
 <div class="container">
@@ -79,7 +79,7 @@ body{background:#f4f6fb;}
 </div>
 
 <script>
-const BATAS_WAKTU = 5; // 5 detik
+const BATAS_WAKTU = 5;
 
 function waktuSekarang(){
     return new Date().toLocaleTimeString("id-ID");
@@ -91,67 +91,70 @@ function beep(){
     setTimeout(()=>audio.play(),200);
 }
 
-// ======================
-// SCAN NFC REAL
-// ======================
 async function scanNFC(){
 
-    if (!("NDEFReader" in window)) {
-        alert("Perangkat / browser tidak mendukung NFC atau belum HTTPS");
-        return;
-    }
+    beep();
 
-    try{
-        const ndef = new NDEFReader();
-        await ndef.scan();
+    if ('NDEFReader' in window) {
+        try {
+            const ndef = new NDEFReader();
+            await ndef.scan();
 
-        document.getElementById("statusText").innerText = "Menunggu kartu ditempelkan...";
+            ndef.onreading = event => {
+                const decoder = new TextDecoder();
+                for (const record of event.message.records) {
+                    const data = decoder.decode(record.data);
+                    prosesGerbang(data);
+                }
+            };
 
-        ndef.onreading = (event) => {
-
-            beep();
-
-            const decoder = new TextDecoder();
-            const textData = decoder.decode(event.message.records[0].data);
-
-            prosesGerbang(textData);
-        };
-
-    }catch(error){
-        alert("Gagal scan NFC: " + error);
+        } catch (error) {
+            alert("NFC gagal diakses.");
+        }
+    } else {
+        alert("Browser tidak mendukung NFC. Gunakan Chrome Android.");
     }
 }
 
-// ======================
-// PROSES DATA KARTU
-// Format kartu: Nama|Kelas
-// ======================
 function prosesGerbang(dataKartu){
 
-    const parts = dataKartu.split("|");
+    const lines = dataKartu.split("\n");
 
-    if(parts.length < 2){
-        alert("Format kartu salah. Gunakan: Nama|Kelas");
+    let nama = "";
+    let kelas = "";
+
+    lines.forEach(line => {
+        if(line.startsWith("NAMA=")){
+            nama = line.replace("NAMA=","").trim();
+        }
+        if(line.startsWith("KELAS=")){
+            kelas = line.replace("KELAS=","").trim();
+        }
+    });
+
+    if(!nama || !kelas){
+        alert("Format kartu salah.\nGunakan:\nNAMA=...\nKELAS=...");
         return;
     }
 
-    const nama = parts[0].trim();
-    const kelas = parts[1].trim();
-
-    // Simpan agar dashboard bisa membaca
     localStorage.setItem("nama", nama);
     localStorage.setItem("kelas", kelas);
 
     let dataKeluar = JSON.parse(localStorage.getItem("dataKeluar")) || {};
+    let riwayat = JSON.parse(localStorage.getItem("riwayatGerbang")) || [];
     let sekarang = Date.now();
 
-    if(!dataKeluar[nama]){
+    let key = nama + "_" + kelas;
 
-        // === KELUAR ===
-        dataKeluar[nama] = sekarang;
+    if(!dataKeluar[key]){
+
+        dataKeluar[key] = sekarang;
         localStorage.setItem("dataKeluar", JSON.stringify(dataKeluar));
 
-        tambahLog(`${nama} (${kelas}) - KELUAR - ${waktuSekarang()}`, "status-tepat");
+        const logText = `${nama} (${kelas}) - KELUAR - ${waktuSekarang()}`;
+
+        tambahLog(logText, "status-tepat");
+        riwayat.unshift(logText);
 
         document.getElementById("statusText").innerHTML =
             `<span class="status-tepat">${nama} (${kelas}) keluar gerbang</span>`;
@@ -160,8 +163,7 @@ function prosesGerbang(dataKartu){
 
     }else{
 
-        // === MASUK ===
-        let waktuKeluar = dataKeluar[nama];
+        let waktuKeluar = dataKeluar[key];
         let selisih = Math.floor((sekarang - waktuKeluar)/1000);
 
         let status, classStatus;
@@ -175,32 +177,21 @@ function prosesGerbang(dataKartu){
             classStatus = "status-bolos";
         }
 
-        tambahLog(`${nama} (${kelas}) - MASUK - ${status} - ${waktuSekarang()}`, classStatus);
+        const logText = `${nama} (${kelas}) - MASUK - ${status} - ${waktuSekarang()}`;
+
+        tambahLog(logText, classStatus);
+        riwayat.unshift(logText);
 
         document.getElementById("statusText").innerHTML =
             `<span class="${classStatus}">${nama} (${kelas}) masuk - ${status}</span>`;
 
-        delete dataKeluar[nama];
+        delete dataKeluar[key];
         localStorage.setItem("dataKeluar", JSON.stringify(dataKeluar));
 
         localStorage.setItem("statusKeluar", status);
     }
-}
 
-// ======================
-// TAMBAH LOG
-// ======================
-function tambahLog(text, className){
-    const log = document.getElementById("logGerbang");
-    const div = document.createElement("div");
-    div.className = "log-item " + className;
-    div.innerText = text;
-    log.prepend(div);
-}
-</script>
-        // sinkron ke dashboard siswa
-        localStorage.setItem("statusKeluar", status);
-    }
+    localStorage.setItem("riwayatGerbang", JSON.stringify(riwayat));
 }
 
 function tambahLog(text, className){
