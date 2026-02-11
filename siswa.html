@@ -238,6 +238,45 @@ function updateJam(){
             year:'numeric'
         });
 }
+<script>
+// ==========================
+// AMBIL DATA DARI KARTU (LOGIN NFC)
+// ==========================
+const namaLogin = localStorage.getItem("nama");
+const kelasLogin = localStorage.getItem("kelas");
+const roleLogin = localStorage.getItem("role");
+
+// Kalau bukan siswa, kembalikan ke login
+if(!namaLogin || roleLogin !== "siswa"){
+    window.location.href = "index.html";
+}
+
+// ==========================
+// TAMPILKAN KE BAGIAN PROFIL
+// ==========================
+const namaElement = document.getElementById("namaSiswa");
+const kelasElement = document.getElementById("kelasSiswa");
+
+if(namaElement){
+    namaElement.innerText = namaLogin;
+}
+
+if(kelasElement){
+    kelasElement.innerText = kelasLogin;
+}
+
+// ==========================
+// FOTO PROFIL OTOMATIS (OPSIONAL)
+// ==========================
+const foto = document.querySelector(".profile img");
+
+if(foto){
+    foto.src = "https://ui-avatars.com/api/?name=" 
+        + encodeURIComponent(namaLogin) 
+        + "&background=3a8dff&color=fff&size=128";
+}
+</script>
+}
 setInterval(updateJam,1000);
 updateJam();
 </script>
