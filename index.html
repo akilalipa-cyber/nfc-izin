@@ -2,35 +2,202 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Sistem Absensi NFC Sekolah</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMA-TAS Login</title>
+
 <style>
-body {
-  font-family: Arial;
-  text-align: center;
-  margin-top: 100px;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+  background:#0f172a;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.wrapper{
+  width:390px;
+  height:780px;
+  background:#f5f5f5;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#4ea8de,#3a86ff);
+  height:160px;
+  border-bottom-left-radius:60px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  text-align:center;
+}
+
+.header img{
+  width:60px;
+  margin-bottom:10px;
+}
+
+.header h1{
+  font-size:32px;
+  font-weight:bold;
+}
+
+.header span{
+  font-size:14px;
+  letter-spacing:1px;
+}
+
+.red{
+  color:#ff2d2d;
+}
+
+/* ===== CONTENT ===== */
+.content{
+  text-align:center;
+  margin-top:120px;
+  padding:20px;
+}
+
+.content h2{
+  font-size:28px;
+  margin-bottom:25px;
+  letter-spacing:2px;
+}
+
+.login-btn{
+  background:linear-gradient(135deg,#4ea8de,#3a86ff);
+  color:white;
+  border:none;
+  padding:15px 40px;
+  font-size:22px;
+  border-radius:40px;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  transition:0.3s;
+}
+
+.login-btn:hover{
+  transform:scale(1.05);
+}
+
+.small-text{
+  margin-top:15px;
+  font-size:13px;
+  color:#555;
+}
+
+.nfc-status{
+  margin-top:15px;
+  font-size:14px;
+  color:#3a86ff;
+  font-weight:500;
+}
+
+/* ===== DECORATION ===== */
+.corner-left{
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:120px;
+  height:120px;
+  background:#1e3a8a;
+  transform:rotate(45deg) translate(-60px,60px);
+}
+
+.corner-right{
+  position:absolute;
+  bottom:0;
+  right:0;
+  width:120px;
+  height:120px;
+  background:#2563eb;
+  transform:rotate(45deg) translate(60px,60px);
 }
 </style>
 </head>
+
 <body>
 
-<h2>Sistem Absensi NFC Sekolah</h2>
-<p>Memuat sistem...</p>
+<div class="wrapper">
+
+  <div class="header">
+    <img src="logo.png" alt="Logo">
+    <h1>SMA-<span class="red">TAS</span></h1>
+    <span>SMAN 1 BIAU <span class="red">BERINTEGRITAS</span></span>
+  </div>
+
+  <div class="content">
+    <h2>SELAMAT DATANG</h2>
+
+    <button class="login-btn">LOGIN</button>
+
+    <div class="small-text">
+      Login melalui <b>Username dan password</b>
+    </div>
+
+    <div id="info" class="nfc-status">
+      Membaca kartu...
+    </div>
+  </div>
+
+  <div class="corner-left"></div>
+  <div class="corner-right"></div>
+
+</div>
 
 <script>
-const user = JSON.parse(localStorage.getItem("user"));
+const info = document.getElementById("info");
 
-if(user){
-  // sudah login, arahkan sesuai role
-  if(user.role === "GERBANG")       location.href = "gerbang.html";
-  else if(user.role === "OPERATOR") location.href = "operator.html";
-  else if(user.role === "WALI")     location.href = "wali.html";
-  else if(user.role === "GURU")     location.href = "guru.html";
-  else if(user.role === "SISWA")    location.href = "siswa.html";
-  else location.href = "login.html";
-}else{
-  // belum login
-  location.href = "login.html";
+if (!("NDEFReader" in window)) {
+  info.textContent = "Gunakan Chrome Android";
 }
+
+(async ()=>{
+  try{
+    const ndef = new NDEFReader();
+    await ndef.scan();
+
+    ndef.onreading = e=>{
+      let data = {};
+      for(const r of e.message.records){
+        if(r.recordType==="text"){
+          const text = new TextDecoder(r.encoding).decode(r.data);
+          text.split("\n").forEach(l=>{
+            const [k,v] = l.split("=");
+            if(k && v) data[k.trim()] = v.trim();
+          });
+        }
+      }
+
+      if(!data.ROLE){
+        info.textContent="Role tidak ditemukan";
+        return;
+      }
+
+      localStorage.setItem("user", JSON.stringify(data));
+
+      if(data.ROLE==="gerbang") location.href="gerbang.html";
+      else if(data.ROLE==="operator") location.href="operator.html";
+      else if(data.ROLE==="wali") location.href="wali.html";
+      else if(data.ROLE==="guru") location.href="guru.html";
+      else if(data.ROLE==="siswa") location.href="siswa.html";
+    };
+
+  }catch{
+    info.textContent="Gagal membaca NFC";
+  }
+})();
 </script>
 
 </body>
