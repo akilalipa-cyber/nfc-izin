@@ -91,29 +91,76 @@ function beep(){
     setTimeout(()=>audio.play(),200);
 }
 
-function scanNFC(){
+// ======================
+// SCAN NFC REAL
+// ======================
+async function scanNFC(){
 
-    beep();
+    if (!("NDEFReader" in window)) {
+        alert("Perangkat / browser tidak mendukung NFC atau belum HTTPS");
+        return;
+    }
 
-    const nama = localStorage.getItem("nama") || "Siswa";
-    const kelas = localStorage.getItem("kelas") || "-";
+    try{
+        const ndef = new NDEFReader();
+        await ndef.scan();
+
+        document.getElementById("statusText").innerText = "Menunggu kartu ditempelkan...";
+
+        ndef.onreading = (event) => {
+
+            beep();
+
+            const decoder = new TextDecoder();
+            const textData = decoder.decode(event.message.records[0].data);
+
+            prosesGerbang(textData);
+        };
+
+    }catch(error){
+        alert("Gagal scan NFC: " + error);
+    }
+}
+
+// ======================
+// PROSES DATA KARTU
+// Format kartu: Nama|Kelas
+// ======================
+function prosesGerbang(dataKartu){
+
+    const parts = dataKartu.split("|");
+
+    if(parts.length < 2){
+        alert("Format kartu salah. Gunakan: Nama|Kelas");
+        return;
+    }
+
+    const nama = parts[0].trim();
+    const kelas = parts[1].trim();
+
+    // Simpan agar dashboard bisa membaca
+    localStorage.setItem("nama", nama);
+    localStorage.setItem("kelas", kelas);
 
     let dataKeluar = JSON.parse(localStorage.getItem("dataKeluar")) || {};
     let sekarang = Date.now();
 
-    // === JIKA BELUM PERNAH KELUAR ===
     if(!dataKeluar[nama]){
 
+        // === KELUAR ===
         dataKeluar[nama] = sekarang;
         localStorage.setItem("dataKeluar", JSON.stringify(dataKeluar));
 
         tambahLog(`${nama} (${kelas}) - KELUAR - ${waktuSekarang()}`, "status-tepat");
 
         document.getElementById("statusText").innerHTML =
-            `<span class="status-tepat">${nama} keluar gerbang</span>`;
+            `<span class="status-tepat">${nama} (${kelas}) keluar gerbang</span>`;
+
+        localStorage.setItem("statusKeluar", "Keluar");
 
     }else{
 
+        // === MASUK ===
         let waktuKeluar = dataKeluar[nama];
         let selisih = Math.floor((sekarang - waktuKeluar)/1000);
 
@@ -131,11 +178,26 @@ function scanNFC(){
         tambahLog(`${nama} (${kelas}) - MASUK - ${status} - ${waktuSekarang()}`, classStatus);
 
         document.getElementById("statusText").innerHTML =
-            `<span class="${classStatus}">${nama} masuk - ${status}</span>`;
+            `<span class="${classStatus}">${nama} (${kelas}) masuk - ${status}</span>`;
 
         delete dataKeluar[nama];
         localStorage.setItem("dataKeluar", JSON.stringify(dataKeluar));
 
+        localStorage.setItem("statusKeluar", status);
+    }
+}
+
+// ======================
+// TAMBAH LOG
+// ======================
+function tambahLog(text, className){
+    const log = document.getElementById("logGerbang");
+    const div = document.createElement("div");
+    div.className = "log-item " + className;
+    div.innerText = text;
+    log.prepend(div);
+}
+</script>
         // sinkron ke dashboard siswa
         localStorage.setItem("statusKeluar", status);
     }
