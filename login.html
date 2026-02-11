@@ -2,89 +2,148 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Login NFC Absensi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Absensi NFC</title>
+
 <style>
-body {
-  font-family: Arial;
-  text-align: center;
-  margin-top: 80px;
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:#f4f6f9;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
-#status {
-  font-size: 18px;
-  margin-top: 20px;
+
+/* CARD */
+.container{
+  width:360px;
+  background:white;
+  border-radius:25px;
+  overflow:hidden;
+  box-shadow:0 20px 40px rgba(0,0,0,0.15);
+  text-align:center;
+}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#4ea8de,#3a86ff);
+  padding:40px 20px;
+  color:white;
+}
+
+.header h1{
+  margin:0;
+  font-size:28px;
+  letter-spacing:1px;
+}
+
+.header span{
+  font-size:12px;
+  opacity:0.9;
+}
+
+/* CONTENT */
+.content{
+  padding:40px 20px 50px;
+}
+
+.content h2{
+  margin-bottom:25px;
+  font-weight:600;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:30px;
+  background:linear-gradient(135deg,#4ea8de,#3a86ff);
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+#info{
+  margin-top:20px;
+  font-size:13px;
+  color:#3a86ff;
 }
 </style>
 </head>
+
 <body>
 
-<h2>LOGIN ABSENSI NFC</h2>
-<button id="scan">SCAN KARTU NFC</button>
-<div id="status">Tempelkan kartu NFC</div>
+<div class="container">
+  <div class="header">
+    <h1>SMA-TAS</h1>
+    <span>SMAN 1 BIAU BERINTEGRITAS</span>
+  </div>
+
+  <div class="content">
+    <h2>SELAMAT DATANG</h2>
+    <button id="scanBtn">SCAN KARTU NFC</button>
+    <div id="info">Tempelkan kartu NFC</div>
+  </div>
+</div>
 
 <script>
-const statusEl = document.getElementById("status");
+const info = document.getElementById("info");
+const btn = document.getElementById("scanBtn");
 
-function beep(){
-  const ctx = new AudioContext();
-  const o = ctx.createOscillator();
-  o.frequency.value = 900;
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.2);
-}
+btn.onclick = async () => {
 
-document.getElementById("scan").onclick = async () => {
-  if (!("NDEFReader" in window)) {
-    statusEl.textContent = "Browser tidak mendukung NFC (Chrome Android)";
+  if(!("NDEFReader" in window)){
+    info.textContent="Gunakan Chrome Android";
     return;
   }
 
-  try {
+  try{
     const ndef = new NDEFReader();
     await ndef.scan();
-    statusEl.textContent = "Membaca kartu NFC...";
+    info.textContent="Membaca kartu...";
 
     ndef.onreading = e => {
-      let text = "";
-      for (const r of e.message.records) {
-        if (r.recordType === "text") {
-          text += new TextDecoder(r.encoding).decode(r.data) + "\n";
+      let data = {};
+
+      for(const r of e.message.records){
+        if(r.recordType==="text"){
+          const text = new TextDecoder(r.encoding).decode(r.data);
+          text.split("\n").forEach(line=>{
+            const [key,val] = line.split("=");
+            if(key && val){
+              data[key.trim()] = val.trim();
+            }
+          });
         }
       }
 
-      let nama="", role="", kelas="";
-      text.split("\n").forEach(l=>{
-        if(l.startsWith("NAMA="))  nama  = l.replace("NAMA=","").trim();
-        if(l.startsWith("ROLE="))  role  = l.replace("ROLE=","").trim();
-        if(l.startsWith("KELAS=")) kelas = l.replace("KELAS=","").trim();
-      });
-
-      if(!nama || !role){
-        statusEl.textContent = "Data kartu tidak valid";
+      if(!data.NAMA || !data.ROLE){
+        info.textContent="Data kartu tidak lengkap";
         return;
       }
 
-      // simpan sesi login
-      localStorage.setItem("user", JSON.stringify({
-        nama, role, kelas
-      }));
+      localStorage.setItem("user", JSON.stringify(data));
 
-      beep();
-      statusEl.textContent = `Selamat datang ${nama} (${role})`;
-
-      // arahkan sesuai role
-      if(role === "GERBANG")   location.href = "gerbang.html";
-      else if(role === "OPERATOR") location.href = "operator.html";
-      else if(role === "WALI") location.href = "wali.html";
-      else if(role === "GURU") location.href = "guru.html";
-      else if(role === "SISWA") location.href = "siswa.html";
-      else statusEl.textContent = "Role tidak dikenali";
+      // Arahkan sesuai role
+      if(data.ROLE==="gerbang") location.href="gerbang.html";
+      else if(data.ROLE==="operator") location.href="operator.html";
+      else if(data.ROLE==="wali") location.href="wali.html";
+      else if(data.ROLE==="guru") location.href="guru.html";
+      else if(data.ROLE==="siswa") location.href="siswa.html";
+      else info.textContent="Role tidak dikenali";
     };
 
-  } catch (err) {
-    statusEl.textContent = "Gagal membaca NFC";
+  } catch {
+    info.textContent="Gagal membaca NFC";
   }
-};
+}
 </script>
 
 </body>
