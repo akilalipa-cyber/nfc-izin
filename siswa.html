@@ -2,35 +2,245 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Siswa</title>
-<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins', sans-serif;
+}
+
+body{
+    background:#f4f6fb;
+}
+
+/* HEADER */
+.header{
+    background:linear-gradient(135deg,#3a8dff,#5f2eea);
+    color:white;
+    padding:25px;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+.header h2{
+    font-weight:600;
+    font-size:18px;
+}
+
+.header h1{
+    margin-top:8px;
+    font-size:24px;
+    font-weight:700;
+}
+
+/* INFO CARD */
+.info-container{
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    margin-bottom:20px;
+}
+
+.time-box{
+    text-align:center;
+}
+
+.time-box h1{
+    font-size:48px;
+    font-weight:700;
+    color:#3a8dff;
+}
+
+.time-box p{
+    color:#777;
+    font-size:14px;
+}
+
+/* PROFILE */
+.profile{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.profile img{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#ddd;
+}
+
+.profile-info h3{
+    font-size:16px;
+    font-weight:600;
+}
+
+.profile-info p{
+    font-size:13px;
+    color:#666;
+}
+
+/* MENU GRID */
+.menu-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.menu-item{
+    background:white;
+    padding:20px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+    transition:0.2s;
+    cursor:pointer;
+}
+
+.menu-item:hover{
+    transform:translateY(-5px);
+}
+
+.menu-item i{
+    font-size:28px;
+    margin-bottom:10px;
+    color:#3a8dff;
+}
+
+.menu-item p{
+    font-size:13px;
+    font-weight:500;
+}
+
+/* STATUS ABSENSI */
+.status-tepat{
+    color:green;
+    font-weight:600;
+}
+
+.status-bolos{
+    color:red;
+    font-weight:600;
+}
+
+/* BOTTOM NAV */
+.bottom-nav{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    background:white;
+    display:flex;
+    justify-content:space-around;
+    padding:12px 0;
+    box-shadow:0 -5px 15px rgba(0,0,0,0.08);
+}
+
+.bottom-nav div{
+    text-align:center;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.bottom-nav i{
+    font-size:20px;
+    display:block;
+}
+</style>
 </head>
 <body>
 
-<div class="header">Dashboard Siswa</div>
-
-<div class="container">
-  <div class="card" id="profil"></div>
-  <div class="card">
-    <h3>Riwayat Keluar Gerbang</h3>
-    <ul id="riwayat"></ul>
-  </div>
+<div class="header">
+    <h2>SMA-TAS SMAN 1 BIAU</h2>
+    <h1>Dashboard Siswa</h1>
 </div>
 
-<script src="data.js"></script>
+<div class="info-container">
+
+    <div class="card profile">
+        <img src="">
+        <div class="profile-info">
+            <h3 id="namaSiswa">Nama Siswa</h3>
+            <p id="kelasSiswa">Kelas XII IPA 1</p>
+        </div>
+    </div>
+
+    <div class="card time-box">
+        <h1 id="jamSekarang">00:00</h1>
+        <p id="tanggalSekarang">Tanggal</p>
+    </div>
+
+    <div class="card">
+        <h3>Status Keluar Gerbang</h3>
+        <p id="statusKeluar" class="status-tepat">Tepat Waktu</p>
+    </div>
+
+    <div class="menu-grid">
+        <div class="menu-item">
+            <i>📋</i>
+            <p>Absensi</p>
+        </div>
+        <div class="menu-item">
+            <i>📊</i>
+            <p>Riwayat</p>
+        </div>
+        <div class="menu-item">
+            <i>📅</i>
+            <p>Jadwal</p>
+        </div>
+        <div class="menu-item">
+            <i>🏆</i>
+            <p>Prestasi</p>
+        </div>
+        <div class="menu-item">
+            <i>ℹ️</i>
+            <p>Info Sekolah</p>
+        </div>
+        <div class="menu-item">
+            <i>⚙️</i>
+            <p>Pengaturan</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="bottom-nav">
+    <div>🏠<span>Beranda</span></div>
+    <div>👤<span>Profil</span></div>
+    <div>⚙️<span>Setting</span></div>
+</div>
+
 <script>
-const user = JSON.parse(localStorage.getItem("user"));
-const profil = document.getElementById("profil");
-const riwayat = document.getElementById("riwayat");
+// JAM REALTIME
+function updateJam(){
+    const now = new Date();
+    document.getElementById("jamSekarang").innerText =
+        now.getHours().toString().padStart(2,'0') + ":" +
+        now.getMinutes().toString().padStart(2,'0');
 
-profil.innerHTML = `<b>${user.NAMA}</b><br>${user.KELAS}`;
-
-ambilAbsenSiswa(user.NAMA).forEach(d=>{
-  const li = document.createElement("li");
-  li.className = d.status==="bolos"?"merah":"hijau";
-  li.textContent = `${d.waktu} → ${d.status.toUpperCase()} (${d.selisih}s)`;
-  riwayat.prepend(li);
-});
+    document.getElementById("tanggalSekarang").innerText =
+        now.toLocaleDateString("id-ID", {
+            weekday:'long',
+            day:'numeric',
+            month:'long',
+            year:'numeric'
+        });
+}
+setInterval(updateJam,1000);
+updateJam();
 </script>
+
 </body>
 </html>
