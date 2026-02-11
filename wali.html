@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Wali Kelas</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:#f4f6fb;}
+
+.header{
+    background:linear-gradient(135deg,#00b09b,#007adf);
+    color:white;
+    padding:25px;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
+}
+
+.container{padding:20px;}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    margin-bottom:20px;
+}
+
+h3{margin-bottom:15px;}
+
+input{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #ddd;
+    margin-bottom:15px;
+}
+
+.log-item{
+    padding:8px 0;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+}
+
+.status-tepat{color:green;font-weight:600;}
+.status-bolos{color:red;font-weight:600;}
+.luar{color:#ff3c38;font-weight:600;}
+
+.stat-box{
+    display:flex;
+    justify-content:space-between;
+    text-align:center;
+}
+
+.stat{
+    flex:1;
+    padding:10px;
+    border-radius:15px;
+    background:#f0f3ff;
+    margin:5px;
+    font-weight:600;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h2>SMA-TAS SMAN 1 BIAU</h2>
+    <h1>Dashboard Wali Kelas</h1>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h3>Filter Nama</h3>
+        <input type="text" id="filterInput" placeholder="Cari siswa..." onkeyup="filterData()">
+    </div>
+
+    <div class="card">
+        <h3>Statistik Hari Ini</h3>
+        <div class="stat-box">
+            <div class="stat" id="statTepat">Tepat: 0</div>
+            <div class="stat" id="statBolos">Bolos: 0</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Siswa Masih di Luar</h3>
+        <div id="siswaLuar"></div>
+    </div>
+
+    <div class="card">
+        <h3>Riwayat Kelas</h3>
+        <div id="riwayatWali"></div>
+    </div>
+
+</div>
+
+<script>
+
+// kelas wali (bisa diubah manual atau ambil dari login nanti)
+const KELAS_WALI = localStorage.getItem("kelasWali") || "XII COKRO";
+
+function tampilkanData(){
+
+    const riwayat = JSON.parse(localStorage.getItem("riwayatGerbang")) || [];
+    const dataKeluar = JSON.parse(localStorage.getItem("dataKeluar")) || {};
+
+    const container = document.getElementById("riwayatWali");
+    const luarContainer = document.getElementById("siswaLuar");
+
+    container.innerHTML = "";
+    luarContainer.innerHTML = "";
+
+    let tepat = 0;
+    let bolos = 0;
+
+    riwayat.forEach(item => {
+
+        if(item.includes(KELAS_WALI)){
+
+            const div = document.createElement("div");
+            div.className = "log-item";
+
+            if(item.includes("Bolos")){
+                div.classList.add("status-bolos");
+                bolos++;
+            }else{
+                div.classList.add("status-tepat");
+                tepat++;
+            }
+
+            div.innerText = item;
+            container.appendChild(div);
+        }
+
+    });
+
+    Object.keys(dataKeluar).forEach(key=>{
+        const [nama, kelas] = key.split("_");
+
+        if(kelas === KELAS_WALI){
+            const div = document.createElement("div");
+            div.className = "log-item luar";
+            div.innerText = `${nama} masih di luar`;
+            luarContainer.appendChild(div);
+        }
+    });
+
+    document.getElementById("statTepat").innerText = "Tepat: " + tepat;
+    document.getElementById("statBolos").innerText = "Bolos: " + bolos;
+}
+
+function filterData(){
+    const filter = document.getElementById("filterInput").value.toLowerCase();
+    const items = document.querySelectorAll("#riwayatWali .log-item");
+
+    items.forEach(item=>{
+        if(item.innerText.toLowerCase().includes(filter)){
+            item.style.display="block";
+        }else{
+            item.style.display="none";
+        }
+    });
+}
+
+tampilkanData();
+
+</script>
+
+</body>
+</html>
