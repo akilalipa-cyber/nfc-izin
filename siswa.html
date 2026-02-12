@@ -3,37 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Siswa</title>
+<title>Dashboard Siswa - SMA TAS</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6fb;}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f2f4f7;
+}
+
+/* HEADER */
 .header{
-background:#1e90ff;
-color:white;
-padding:20px;
-text-align:center;
+    background: linear-gradient(135deg,#4e73df,#6f42c1);
+    padding:40px 20px 60px;
+    color:white;
+    text-align:center;
+    border-bottom-left-radius:40px;
+    border-bottom-right-radius:40px;
 }
-.card{
-background:white;
-margin:15px;
-padding:20px;
-border-radius:15px;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
+
+.header h1{
+    font-size:28px;
+    font-weight:bold;
 }
+
+.header p{
+    font-size:14px;
+    opacity:0.9;
+}
+
+/* PROFILE CARD */
+.profile-card{
+    background:white;
+    width:90%;
+    margin:-40px auto 20px;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    display:flex;
+    align-items:center;
+}
+
+.avatar{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:#ddd;
+    margin-right:15px;
+}
+
+.profile-info h2{
+    font-size:18px;
+}
+
+.profile-info p{
+    font-size:14px;
+    color:gray;
+}
+
+/* JAM */
+.time-card{
+    background:white;
+    width:90%;
+    margin:10px auto;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.time{
+    font-size:40px;
+    font-weight:bold;
+    color:#4e73df;
+}
+
+/* STATUS */
+.status-card{
+    background:white;
+    width:90%;
+    margin:10px auto;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.status-card h3{
+    margin-bottom:10px;
+}
+
 .status{
-font-size:20px;
-font-weight:bold;
+    font-weight:bold;
+    font-size:18px;
 }
-.green{color:green;}
-.orange{color:orange;}
-.red{color:red;}
-button{
-padding:10px 15px;
-border:none;
-border-radius:10px;
-background:#1e90ff;
-color:white;
-margin-top:10px;
+
+/* MENU GRID */
+.menu{
+    width:90%;
+    margin:20px auto 100px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.menu div{
+    background:white;
+    padding:25px 10px;
+    text-align:center;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.menu div:hover{
+    transform:scale(1.05);
+}
+
+.menu p{
+    margin-top:10px;
+    font-size:14px;
+}
+
+/* BOTTOM NAV */
+.bottom-nav{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:white;
+    display:flex;
+    justify-content:space-around;
+    padding:12px 0;
+    box-shadow:0 -5px 15px rgba(0,0,0,0.1);
+}
+
+.bottom-nav div{
+    text-align:center;
+    font-size:14px;
+    cursor:pointer;
 }
 </style>
 </head>
@@ -41,94 +153,106 @@ margin-top:10px;
 <body>
 
 <div class="header">
-<h2 id="namaSiswa">-</h2>
-<p id="kelasSiswa">-</p>
-<h1 id="jam">00:00:00</h1>
-<p id="tanggal"></p>
+    <h1>SMA-TAS</h1>
+    <p>SMAN 1 BIAU BERINTEGRITAS</p>
 </div>
 
-<div class="card">
-<div id="statusHari" class="status">Belum Absen</div>
-<button onclick="absen()">ABSEN HADIR</button>
+<div class="profile-card">
+    <div class="avatar"></div>
+    <div class="profile-info">
+        <h2>NAMA AQYL</h2>
+        <p>KELAS XII COKRO</p>
+    </div>
 </div>
 
-<div class="card">
-<h3>Riwayat Keluar Gerbang</h3>
-<p id="riwayatGerbang">Belum ada data</p>
+<div class="time-card">
+    <div class="time" id="jam">00:00</div>
+    <div id="tanggal"></div>
 </div>
 
-<div class="card">
-<button onclick="logout()">Logout</button>
+<div class="status-card">
+    <h3>Status Kehadiran</h3>
+    <div class="status" id="statusKehadiran">BELUM ABSEN</div>
+</div>
+
+<div class="menu">
+
+<div onclick="location.href='absensi_siswa.html'">
+📋
+<p>Absensi</p>
+</div>
+
+<div onclick="location.href='riwayat_siswa.html'">
+📊
+<p>Riwayat</p>
+</div>
+
+<div onclick="location.href='jadwal_siswa.html'">
+📅
+<p>Jadwal</p>
+</div>
+
+<div onclick="location.href='prestasi_siswa.html'">
+🏆
+<p>Prestasi</p>
+</div>
+
+<div onclick="location.href='info_sekolah.html'">
+ℹ️
+<p>Info</p>
+</div>
+
+<div onclick="location.href='pengaturan_siswa.html'">
+⚙️
+<p>Pengaturan</p>
+</div>
+
+</div>
+
+<div class="bottom-nav">
+    <div onclick="location.href='siswa.html'">🏠 Beranda</div>
+    <div onclick="location.href='profil_siswa.html'">👤 Profil</div>
+    <div onclick="location.href='pengaturan_siswa.html'">⚙️ Setting</div>
 </div>
 
 <script>
 
-// AMAN walau kosong
-let nama=localStorage.getItem("nama") || "Siswa";
-let kelas=localStorage.getItem("kelas") || "-";
-
-document.getElementById("namaSiswa").innerText=nama;
-document.getElementById("kelasSiswa").innerText=kelas;
-
-function updateJam(){
-let now=new Date();
-document.getElementById("jam").innerText=now.toLocaleTimeString("id-ID");
-document.getElementById("tanggal").innerText=
-now.toLocaleDateString("id-ID",{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+// proteksi akses
+if(localStorage.getItem("role") !== "siswa"){
+    window.location.href = "index.html";
 }
+
+// jam realtime
+function updateJam(){
+    const now = new Date();
+    const jam = now.getHours().toString().padStart(2,'0');
+    const menit = now.getMinutes().toString().padStart(2,'0');
+    document.getElementById("jam").innerText = jam + ":" + menit;
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("tanggal").innerText =
+        now.toLocaleDateString('id-ID', options);
+}
+
 setInterval(updateJam,1000);
 updateJam();
 
-function absen(){
-let now=new Date();
-let menit=now.getHours()*60+now.getMinutes();
+// aturan kehadiran
+function cekStatus(){
+    const now = new Date();
+    const batas = new Date();
+    batas.setHours(7,15,0);
 
-let status="HADIR";
-
-if(menit>435){
-status="TERLAMBAT";
+    if(now <= batas){
+        document.getElementById("statusKehadiran").innerText = "HADIR";
+        document.getElementById("statusKehadiran").style.color = "green";
+    }else{
+        document.getElementById("statusKehadiran").innerText = "ALPA";
+        document.getElementById("statusKehadiran").style.color = "red";
+    }
 }
 
-localStorage.setItem("absenHariIni",status);
-
-updateStatus();
-}
-
-function updateStatus(){
-let status=localStorage.getItem("absenHariIni");
-
-let el=document.getElementById("statusHari");
-
-if(!status){
-el.innerText="Belum Absen";
-return;
-}
-
-if(status==="HADIR"){
-el.innerText="HADIR";
-el.className="status green";
-}
-
-if(status==="TERLAMBAT"){
-el.innerText="TERLAMBAT";
-el.className="status orange";
-}
-}
-
-function loadRiwayat(){
-let data=localStorage.getItem("statusKeluar");
-if(data){
-document.getElementById("riwayatGerbang").innerText=data;
-}
-}
-
-function logout(){
-localStorage.clear();
-window.location.href="index.html";
-}
-
-updateStatus();
-loadRiwayat();
+cekStatus();
 
 </script>
 
