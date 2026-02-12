@@ -6,74 +6,34 @@
 <title>Dashboard Siswa</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f7fa;}
+body{margin:0;font-family:Arial;background:#f4f6fb;}
 .header{
-background:linear-gradient(135deg,#1e90ff,#4facfe);
-padding:25px;color:white;text-align:center;
-border-bottom-left-radius:30px;
-border-bottom-right-radius:30px;
+background:#1e90ff;
+color:white;
+padding:20px;
+text-align:center;
 }
 .card{
-background:white;margin:15px;padding:20px;
+background:white;
+margin:15px;
+padding:20px;
 border-radius:15px;
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
-.status{font-size:20px;font-weight:bold;}
+.status{
+font-size:20px;
+font-weight:bold;
+}
 .green{color:green;}
 .orange{color:orange;}
 .red{color:red;}
-
 button{
-width:100%;
-padding:12px;
+padding:10px 15px;
 border:none;
-border-radius:20px;
-margin-top:10px;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-.btn-hadir{background:#1e90ff;}
-.btn-sakit{background:orange;}
-
-.calendar{
-display:grid;
-grid-template-columns:repeat(7,1fr);
-gap:5px;
-margin-top:10px;
-}
-.day{
-padding:10px;
-text-align:center;
 border-radius:10px;
-font-size:14px;
-}
-.hadir{background:#4caf50;color:white;}
-.terlambat{background:#ff9800;color:white;}
-.bolos{background:#f44336;color:white;}
-.default{background:#ddd;}
-
-.menu{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin:15px;
-}
-.menu button{
-background:#eee;color:black;
-}
-.bottom{
-position:fixed;
-bottom:0;width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-padding:10px 0;
-box-shadow:0 -3px 10px rgba(0,0,0,0.1);
-}
-.bottom button{
-background:none;
-color:black;
+background:#1e90ff;
+color:white;
+margin-top:10px;
 }
 </style>
 </head>
@@ -81,152 +41,94 @@ color:black;
 <body>
 
 <div class="header">
-<h2 id="namaSiswa"></h2>
-<p id="kelasSiswa"></p>
-<h1 id="jam"></h1>
+<h2 id="namaSiswa">-</h2>
+<p id="kelasSiswa">-</p>
+<h1 id="jam">00:00:00</h1>
 <p id="tanggal"></p>
 </div>
 
 <div class="card">
-<div class="status" id="statusHari">Belum Absen</div>
-<button class="btn-hadir" onclick="absen('hadir')">HADIR</button>
-<button class="btn-sakit" onclick="absen('sakit')">SAKIT</button>
+<div id="statusHari" class="status">Belum Absen</div>
+<button onclick="absen()">ABSEN HADIR</button>
 </div>
 
 <div class="card">
-<h3>Kalender Kehadiran</h3>
-<div class="calendar" id="calendar"></div>
+<h3>Riwayat Keluar Gerbang</h3>
+<p id="riwayatGerbang">Belum ada data</p>
 </div>
 
-<div class="menu">
-<button onclick="lihatRiwayat()">Riwayat</button>
-<button onclick="lihatJadwal()">Jadwal</button>
-<button onclick="lihatPrestasi()">Prestasi</button>
-<button onclick="lihatInfo()">Info Sekolah</button>
+<div class="card">
 <button onclick="logout()">Logout</button>
-</div>
-
-<div class="bottom">
-<button onclick="location.reload()">Beranda</button>
-<button onclick="alert('Profil dari kartu NFC')">Profil</button>
-<button onclick="alert('Pengaturan UI, Bahasa, Suara')">Setting</button>
 </div>
 
 <script>
 
-if(localStorage.getItem("role")!=="siswa"){
-window.location="index.html";
-}
+// AMAN walau kosong
+let nama=localStorage.getItem("nama") || "Siswa";
+let kelas=localStorage.getItem("kelas") || "-";
 
-document.getElementById("namaSiswa").innerText=localStorage.getItem("nama");
-document.getElementById("kelasSiswa").innerText=localStorage.getItem("kelas");
+document.getElementById("namaSiswa").innerText=nama;
+document.getElementById("kelasSiswa").innerText=kelas;
 
 function updateJam(){
 let now=new Date();
 document.getElementById("jam").innerText=now.toLocaleTimeString("id-ID");
-document.getElementById("tanggal").innerText=now.toLocaleDateString("id-ID",{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-cekBolos();
+document.getElementById("tanggal").innerText=
+now.toLocaleDateString("id-ID",{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
 setInterval(updateJam,1000);
 updateJam();
 
-function todayKey(){
-let n=new Date();
-return "absen_"+n.getDate()+"_"+n.getMonth()+"_"+n.getFullYear();
-}
-
-function absen(jenis){
-
-let now=new Date();
-let status=jenis;
-
-if(jenis==="hadir"){
-let menit=now.getHours()*60+now.getMinutes();
-if(menit>435) status="terlambat";
-}
-
-localStorage.setItem(todayKey(),JSON.stringify({
-status:status,
-jam:now.toLocaleTimeString("id-ID")
-}));
-
-loadCalendar();
-cekStatus();
-}
-
-function cekBolos(){
+function absen(){
 let now=new Date();
 let menit=now.getHours()*60+now.getMinutes();
-let data=localStorage.getItem(todayKey());
 
-if(!data && menit>435){
-localStorage.setItem(todayKey(),JSON.stringify({status:"bolos"}));
-}
-cekStatus();
+let status="HADIR";
+
+if(menit>435){
+status="TERLAMBAT";
 }
 
-function cekStatus(){
-let data=localStorage.getItem(todayKey());
+localStorage.setItem("absenHariIni",status);
+
+updateStatus();
+}
+
+function updateStatus(){
+let status=localStorage.getItem("absenHariIni");
+
 let el=document.getElementById("statusHari");
 
-if(!data){el.innerText="Belum Absen";return;}
-
-let obj=JSON.parse(data);
-
-if(obj.status==="hadir"){el.innerText="HADIR";el.className="status green";}
-if(obj.status==="terlambat"){el.innerText="TERLAMBAT";el.className="status orange";}
-if(obj.status==="bolos"){el.innerText="BOLOS";el.className="status red";}
-if(obj.status==="sakit"){el.innerText="SAKIT";el.className="status orange";}
+if(!status){
+el.innerText="Belum Absen";
+return;
 }
 
-function loadCalendar(){
-let cal=document.getElementById("calendar");
-cal.innerHTML="";
-let now=new Date();
-let total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+if(status==="HADIR"){
+el.innerText="HADIR";
+el.className="status green";
+}
 
-for(let i=1;i<=total;i++){
-let key="absen_"+i+"_"+now.getMonth()+"_"+now.getFullYear();
-let data=localStorage.getItem(key);
-let div=document.createElement("div");
-div.classList.add("day");
+if(status==="TERLAMBAT"){
+el.innerText="TERLAMBAT";
+el.className="status orange";
+}
+}
 
+function loadRiwayat(){
+let data=localStorage.getItem("statusKeluar");
 if(data){
-let obj=JSON.parse(data);
-div.classList.add(obj.status);
-}else{
-div.classList.add("default");
+document.getElementById("riwayatGerbang").innerText=data;
 }
-
-div.innerText=i;
-cal.appendChild(div);
-}
-}
-
-function lihatRiwayat(){
-alert("Riwayat keluar gerbang: "+(localStorage.getItem("statusKeluar")||"Belum ada"));
-}
-
-function lihatJadwal(){
-alert("Jadwal mapel sesuai kelas");
-}
-
-function lihatPrestasi(){
-alert("Informasi pusat prestasi sekolah");
-}
-
-function lihatInfo(){
-alert("Data lengkap sekolah");
 }
 
 function logout(){
 localStorage.clear();
-window.location="index.html";
+window.location.href="index.html";
 }
 
-loadCalendar();
-cekStatus();
+updateStatus();
+loadRiwayat();
 
 </script>
 
