@@ -6,95 +6,74 @@
 <title>Dashboard Siswa</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#f2f4f8;
-}
-
+body{margin:0;font-family:Arial;background:#f5f7fa;}
 .header{
-    background:linear-gradient(135deg,#1e90ff,#6a5acd);
-    padding:25px;
-    color:white;
-    border-bottom-left-radius:30px;
-    border-bottom-right-radius:30px;
+background:linear-gradient(135deg,#1e90ff,#4facfe);
+padding:25px;color:white;text-align:center;
+border-bottom-left-radius:30px;
+border-bottom-right-radius:30px;
 }
-
-.container{
-    padding:20px;
-}
-
 .card{
-    background:white;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom:20px;
+background:white;margin:15px;padding:20px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
+.status{font-size:20px;font-weight:bold;}
+.green{color:green;}
+.orange{color:orange;}
+.red{color:red;}
 
-.nama{ font-size:18px; font-weight:bold; }
-.kelas{ color:gray; }
-
-.jam{
-    font-size:28px;
-    font-weight:bold;
-    margin-top:10px;
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:20px;
+margin-top:10px;
+color:white;
+font-weight:bold;
+cursor:pointer;
 }
-
-.status{
-    font-size:18px;
-    font-weight:bold;
-    margin-top:10px;
-}
+.btn-hadir{background:#1e90ff;}
+.btn-sakit{background:orange;}
 
 .calendar{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:5px;
-    margin-top:15px;
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:5px;
+margin-top:10px;
 }
-
 .day{
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    color:white;
-    font-size:14px;
+padding:10px;
+text-align:center;
+border-radius:10px;
+font-size:14px;
 }
+.hadir{background:#4caf50;color:white;}
+.terlambat{background:#ff9800;color:white;}
+.bolos{background:#f44336;color:white;}
+.default{background:#ddd;}
 
-.hadir{ background:#28a745; }
-.terlambat{ background:#ffc107; color:black; }
-.bolos{ background:#dc3545; }
-.sakit{ background:#fd7e14; }
-.default{ background:#cfd8dc; color:black; }
-
-.btn{
-    padding:10px;
-    margin:5px;
-    border:none;
-    border-radius:20px;
-    width:140px;
-    color:white;
-    cursor:pointer;
+.menu{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin:15px;
 }
-
-.btn-hadir{ background:#007bff; }
-.btn-sakit{ background:#ff8800; }
-
+.menu button{
+background:#eee;color:black;
+}
 .bottom{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    background:white;
-    display:flex;
-    justify-content:space-around;
-    padding:10px 0;
-    box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+position:fixed;
+bottom:0;width:100%;
+background:white;
+display:flex;
+justify-content:space-around;
+padding:10px 0;
+box-shadow:0 -3px 10px rgba(0,0,0,0.1);
 }
-.bottom div{
-    text-align:center;
-    font-size:14px;
-    cursor:pointer;
+.bottom button{
+background:none;
+color:black;
 }
 </style>
 </head>
@@ -102,171 +81,152 @@ body{
 <body>
 
 <div class="header">
-    <h2>Dashboard Siswa</h2>
-</div>
-
-<div class="container">
-
-<div class="card">
-    <div class="nama" id="namaSiswa"></div>
-    <div class="kelas" id="kelasSiswa"></div>
-    <div class="jam" id="jamSekarang"></div>
-    <div id="tanggalSekarang"></div>
+<h2 id="namaSiswa"></h2>
+<p id="kelasSiswa"></p>
+<h1 id="jam"></h1>
+<p id="tanggal"></p>
 </div>
 
 <div class="card">
-    <div>Status Kehadiran</div>
-    <div class="status" id="statusHari"></div>
-    <button class="btn btn-hadir" onclick="absen('hadir')">HADIR</button>
-    <button class="btn btn-sakit" onclick="absen('sakit')">SAKIT</button>
-
-    <div class="calendar" id="calendar"></div>
+<div class="status" id="statusHari">Belum Absen</div>
+<button class="btn-hadir" onclick="absen('hadir')">HADIR</button>
+<button class="btn-sakit" onclick="absen('sakit')">SAKIT</button>
 </div>
 
+<div class="card">
+<h3>Kalender Kehadiran</h3>
+<div class="calendar" id="calendar"></div>
+</div>
+
+<div class="menu">
+<button onclick="lihatRiwayat()">Riwayat</button>
+<button onclick="lihatJadwal()">Jadwal</button>
+<button onclick="lihatPrestasi()">Prestasi</button>
+<button onclick="lihatInfo()">Info Sekolah</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <div class="bottom">
-    <div onclick="tampilBeranda()">Beranda</div>
-    <div onclick="tampilProfil()">Profil</div>
-    <div onclick="tampilSetting()">Setting</div>
+<button onclick="location.reload()">Beranda</button>
+<button onclick="alert('Profil dari kartu NFC')">Profil</button>
+<button onclick="alert('Pengaturan UI, Bahasa, Suara')">Setting</button>
 </div>
 
 <script>
 
-// CEK ROLE
-if(localStorage.getItem("role") !== "siswa"){
-    window.location.href="index.html";
+if(localStorage.getItem("role")!=="siswa"){
+window.location="index.html";
 }
 
-// AMBIL DATA KARTU
-document.getElementById("namaSiswa").innerText = localStorage.getItem("nama");
-document.getElementById("kelasSiswa").innerText = localStorage.getItem("kelas");
+document.getElementById("namaSiswa").innerText=localStorage.getItem("nama");
+document.getElementById("kelasSiswa").innerText=localStorage.getItem("kelas");
 
-// JAM REALTIME
 function updateJam(){
-    const now = new Date();
-    document.getElementById("jamSekarang").innerText =
-        now.toLocaleTimeString("id-ID");
-    document.getElementById("tanggalSekarang").innerText =
-        now.toLocaleDateString("id-ID",{
-            weekday:'long',
-            day:'numeric',
-            month:'long',
-            year:'numeric'
-        });
+let now=new Date();
+document.getElementById("jam").innerText=now.toLocaleTimeString("id-ID");
+document.getElementById("tanggal").innerText=now.toLocaleDateString("id-ID",{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+cekBolos();
 }
 setInterval(updateJam,1000);
 updateJam();
 
-// ABSENSI SYSTEM
-const now = new Date();
-const today = now.getDate();
-const bulan = now.getMonth();
-const tahun = now.getFullYear();
+function todayKey(){
+let n=new Date();
+return "absen_"+n.getDate()+"_"+n.getMonth()+"_"+n.getFullYear();
+}
 
 function absen(jenis){
 
-    let statusFinal = jenis;
+let now=new Date();
+let status=jenis;
 
-    if(jenis==="hadir"){
-        const menitSekarang = now.getHours()*60 + now.getMinutes();
-        const batas = 7*60 + 15;
-        if(menitSekarang > batas){
-            statusFinal = "terlambat";
-        } else {
-            statusFinal = "hadir";
-        }
-    }
+if(jenis==="hadir"){
+let menit=now.getHours()*60+now.getMinutes();
+if(menit>435) status="terlambat";
+}
 
-    localStorage.setItem(
-        "absen_"+today+"_"+bulan+"_"+tahun,
-        JSON.stringify({status:statusFinal})
-    );
+localStorage.setItem(todayKey(),JSON.stringify({
+status:status,
+jam:now.toLocaleTimeString("id-ID")
+}));
 
-    cekStatus();
-    loadCalendar();
+loadCalendar();
+cekStatus();
+}
+
+function cekBolos(){
+let now=new Date();
+let menit=now.getHours()*60+now.getMinutes();
+let data=localStorage.getItem(todayKey());
+
+if(!data && menit>435){
+localStorage.setItem(todayKey(),JSON.stringify({status:"bolos"}));
+}
+cekStatus();
 }
 
 function cekStatus(){
-    const data = JSON.parse(localStorage.getItem(
-        "absen_"+today+"_"+bulan+"_"+tahun
-    ));
+let data=localStorage.getItem(todayKey());
+let el=document.getElementById("statusHari");
 
-    const status = document.getElementById("statusHari");
+if(!data){el.innerText="Belum Absen";return;}
 
-    if(!data){
-        status.innerText="Belum Absen";
-        status.style.color="black";
-        return;
-    }
+let obj=JSON.parse(data);
 
-    if(data.status==="hadir"){
-        status.innerText="HADIR";
-        status.style.color="green";
-    }
-
-    if(data.status==="terlambat"){
-        status.innerText="TERLAMBAT";
-        status.style.color="orange";
-    }
-
-    if(data.status==="bolos"){
-        status.innerText="BOLOS";
-        status.style.color="red";
-    }
-
-    if(data.status==="sakit"){
-        status.innerText="SAKIT";
-        status.style.color="#ff8800";
-    }
+if(obj.status==="hadir"){el.innerText="HADIR";el.className="status green";}
+if(obj.status==="terlambat"){el.innerText="TERLAMBAT";el.className="status orange";}
+if(obj.status==="bolos"){el.innerText="BOLOS";el.className="status red";}
+if(obj.status==="sakit"){el.innerText="SAKIT";el.className="status orange";}
 }
 
 function loadCalendar(){
-    const cal = document.getElementById("calendar");
-    cal.innerHTML="";
-    const total = new Date(tahun,bulan+1,0).getDate();
+let cal=document.getElementById("calendar");
+cal.innerHTML="";
+let now=new Date();
+let total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
 
-    for(let i=1;i<=total;i++){
-        const div=document.createElement("div");
-        div.classList.add("day");
+for(let i=1;i<=total;i++){
+let key="absen_"+i+"_"+now.getMonth()+"_"+now.getFullYear();
+let data=localStorage.getItem(key);
+let div=document.createElement("div");
+div.classList.add("day");
 
-        const data=JSON.parse(localStorage.getItem(
-            "absen_"+i+"_"+bulan+"_"+tahun
-        ));
-
-        if(data){
-            div.classList.add(data.status);
-        }else if(i<today){
-            div.classList.add("bolos");
-            localStorage.setItem(
-                "absen_"+i+"_"+bulan+"_"+tahun,
-                JSON.stringify({status:"bolos"})
-            );
-        }else{
-            div.classList.add("default");
-        }
-
-        div.innerText=i;
-        cal.appendChild(div);
-    }
+if(data){
+let obj=JSON.parse(data);
+div.classList.add(obj.status);
+}else{
+div.classList.add("default");
 }
 
-cekStatus();
+div.innerText=i;
+cal.appendChild(div);
+}
+}
+
+function lihatRiwayat(){
+alert("Riwayat keluar gerbang: "+(localStorage.getItem("statusKeluar")||"Belum ada"));
+}
+
+function lihatJadwal(){
+alert("Jadwal mapel sesuai kelas");
+}
+
+function lihatPrestasi(){
+alert("Informasi pusat prestasi sekolah");
+}
+
+function lihatInfo(){
+alert("Data lengkap sekolah");
+}
+
+function logout(){
+localStorage.clear();
+window.location="index.html";
+}
+
 loadCalendar();
-
-// MENU BAWAH
-function tampilBeranda(){
-    alert("Beranda Aktif");
-}
-
-function tampilProfil(){
-    alert("Nama: "+localStorage.getItem("nama")+
-    "\nKelas: "+localStorage.getItem("kelas"));
-}
-
-function tampilSetting(){
-    alert("Pengaturan UI, Bahasa, Suara");
-}
+cekStatus();
 
 </script>
 
