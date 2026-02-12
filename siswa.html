@@ -3,149 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Siswa - SMA TAS</title>
+<title>Dashboard Siswa</title>
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
 body{
+    margin:0;
+    font-family:Arial;
     background:#f2f4f7;
 }
 
-/* HEADER */
 .header{
-    background: linear-gradient(135deg,#4e73df,#6f42c1);
-    padding:40px 20px 60px;
+    background:linear-gradient(135deg,#4e73df,#6f42c1);
+    padding:35px;
     color:white;
     text-align:center;
-    border-bottom-left-radius:40px;
-    border-bottom-right-radius:40px;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
 }
 
-.header h1{
-    font-size:28px;
-    font-weight:bold;
-}
-
-.header p{
-    font-size:14px;
-    opacity:0.9;
-}
-
-/* PROFILE CARD */
-.profile-card{
+.card{
     background:white;
-    width:90%;
-    margin:-40px auto 20px;
+    margin:20px;
     padding:20px;
-    border-radius:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-    display:flex;
-    align-items:center;
+    border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
-.avatar{
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    background:#ddd;
-    margin-right:15px;
-}
-
-.profile-info h2{
-    font-size:18px;
-}
-
-.profile-info p{
-    font-size:14px;
-    color:gray;
-}
-
-/* JAM */
-.time-card{
-    background:white;
-    width:90%;
-    margin:10px auto;
-    padding:25px;
-    border-radius:20px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.time{
-    font-size:40px;
+.jam{
+    font-size:35px;
     font-weight:bold;
     color:#4e73df;
 }
 
-/* STATUS */
-.status-card{
-    background:white;
-    width:90%;
-    margin:10px auto;
-    padding:20px;
-    border-radius:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.status-card h3{
-    margin-bottom:10px;
-}
-
-.status{
-    font-weight:bold;
-    font-size:18px;
-}
-
-/* MENU GRID */
 .menu{
-    width:90%;
-    margin:20px auto 100px;
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:15px;
+    margin:20px;
+}
+
+.menu a{
+    text-decoration:none;
 }
 
 .menu div{
     background:white;
-    padding:25px 10px;
+    padding:20px 10px;
+    border-radius:15px;
     text-align:center;
-    border-radius:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-    cursor:pointer;
-    transition:0.2s;
-}
-
-.menu div:hover{
-    transform:scale(1.05);
-}
-
-.menu p{
-    margin-top:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
     font-size:14px;
+    color:black;
 }
 
-/* BOTTOM NAV */
-.bottom-nav{
+.bottom{
     position:fixed;
     bottom:0;
     width:100%;
     background:white;
     display:flex;
     justify-content:space-around;
-    padding:12px 0;
-    box-shadow:0 -5px 15px rgba(0,0,0,0.1);
-}
-
-.bottom-nav div{
-    text-align:center;
-    font-size:14px;
-    cursor:pointer;
+    padding:10px 0;
+    box-shadow:0 -4px 10px rgba(0,0,0,0.1);
 }
 </style>
 </head>
@@ -153,107 +72,77 @@ body{
 <body>
 
 <div class="header">
-    <h1>SMA-TAS</h1>
+    <h2>SMA-TAS</h2>
     <p>SMAN 1 BIAU BERINTEGRITAS</p>
 </div>
 
-<div class="profile-card">
-    <div class="avatar"></div>
-    <div class="profile-info">
-        <h2>NAMA AQYL</h2>
-        <p>KELAS XII COKRO</p>
-    </div>
+<div class="card">
+    <b id="nama">NAMA</b><br>
+    <span id="kelas">KELAS</span>
 </div>
 
-<div class="time-card">
-    <div class="time" id="jam">00:00</div>
+<div class="card">
+    <div class="jam" id="jam">00:00</div>
     <div id="tanggal"></div>
 </div>
 
-<div class="status-card">
-    <h3>Status Kehadiran</h3>
-    <div class="status" id="statusKehadiran">BELUM ABSEN</div>
+<div class="card">
+    <b>Status Kehadiran:</b>
+    <div id="status">Belum Absen</div>
 </div>
 
 <div class="menu">
-
-<div onclick="location.href='absensi_siswa.html'">
-📋
-<p>Absensi</p>
+<a href="absensi_siswa.html"><div>Absensi</div></a>
+<a href="riwayat_siswa.html"><div>Riwayat</div></a>
+<a href="jadwal_siswa.html"><div>Jadwal</div></a>
+<a href="prestasi_siswa.html"><div>Prestasi</div></a>
+<a href="info_sekolah.html"><div>Info</div></a>
+<a href="pengaturan_siswa.html"><div>Pengaturan</div></a>
 </div>
 
-<div onclick="location.href='riwayat_siswa.html'">
-📊
-<p>Riwayat</p>
-</div>
-
-<div onclick="location.href='jadwal_siswa.html'">
-📅
-<p>Jadwal</p>
-</div>
-
-<div onclick="location.href='prestasi_siswa.html'">
-🏆
-<p>Prestasi</p>
-</div>
-
-<div onclick="location.href='info_sekolah.html'">
-ℹ️
-<p>Info</p>
-</div>
-
-<div onclick="location.href='pengaturan_siswa.html'">
-⚙️
-<p>Pengaturan</p>
-</div>
-
-</div>
-
-<div class="bottom-nav">
-    <div onclick="location.href='siswa.html'">🏠 Beranda</div>
-    <div onclick="location.href='profil_siswa.html'">👤 Profil</div>
-    <div onclick="location.href='pengaturan_siswa.html'">⚙️ Setting</div>
+<div class="bottom">
+<div>Beranda</div>
+<a href="profil_siswa.html">Profil</a>
+<a href="pengaturan_siswa.html">Setting</a>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function(){
 
-// proteksi akses
-if(localStorage.getItem("role") !== "siswa"){
-    window.location.href = "index.html";
-}
+// ambil data aman
+let nama = localStorage.getItem("nama") || "NAMA AQYL";
+let kelas = localStorage.getItem("kelas") || "KELAS XII COKRO";
 
-// jam realtime
+document.getElementById("nama").innerText = nama;
+document.getElementById("kelas").innerText = kelas;
+
+// jam realtime ringan
 function updateJam(){
     const now = new Date();
     const jam = now.getHours().toString().padStart(2,'0');
     const menit = now.getMinutes().toString().padStart(2,'0');
     document.getElementById("jam").innerText = jam + ":" + menit;
 
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("tanggal").innerText =
-        now.toLocaleDateString('id-ID', options);
+        now.toLocaleDateString("id-ID");
 }
-
 setInterval(updateJam,1000);
 updateJam();
 
-// aturan kehadiran
-function cekStatus(){
-    const now = new Date();
-    const batas = new Date();
-    batas.setHours(7,15,0);
+// aturan 7:15
+let now = new Date();
+let batas = new Date();
+batas.setHours(7,15,0);
 
-    if(now <= batas){
-        document.getElementById("statusKehadiran").innerText = "HADIR";
-        document.getElementById("statusKehadiran").style.color = "green";
-    }else{
-        document.getElementById("statusKehadiran").innerText = "ALPA";
-        document.getElementById("statusKehadiran").style.color = "red";
-    }
+if(now <= batas){
+    document.getElementById("status").innerText = "HADIR";
+    document.getElementById("status").style.color = "green";
+}else{
+    document.getElementById("status").innerText = "ALPA";
+    document.getElementById("status").style.color = "red";
 }
 
-cekStatus();
-
+});
 </script>
 
 </body>
