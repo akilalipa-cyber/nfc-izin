@@ -5,233 +5,150 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Siswa</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins', sans-serif;
-}
-
 body{
-    background:#f4f6fb;
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f2f4f8;
 }
 
-/* HEADER */
 .header{
-    background:linear-gradient(135deg,#3a8dff,#5f2eea);
-    color:white;
+    background:linear-gradient(135deg,#1e90ff,#6a5acd);
     padding:25px;
+    color:white;
     border-bottom-left-radius:30px;
     border-bottom-right-radius:30px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.15);
 }
 
-.header h2{
-    font-weight:600;
-    font-size:18px;
-}
-
-.header h1{
-    margin-top:8px;
-    font-size:24px;
-    font-weight:700;
-}
-
-/* INFO CARD */
-.info-container{
+.container{
     padding:20px;
 }
 
 .card{
     background:white;
     padding:20px;
-    border-radius:20px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
     margin-bottom:20px;
 }
 
-.time-box{
+.nama{ font-size:18px; font-weight:bold; }
+.kelas{ color:gray; }
+
+.jam{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.status{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:5px;
+    margin-top:15px;
+}
+
+.day{
+    padding:10px;
+    border-radius:10px;
     text-align:center;
-}
-
-.time-box h1{
-    font-size:48px;
-    font-weight:700;
-    color:#3a8dff;
-}
-
-.time-box p{
-    color:#777;
+    color:white;
     font-size:14px;
 }
 
-/* PROFILE */
-.profile{
-    display:flex;
-    align-items:center;
-    gap:15px;
-}
+.hadir{ background:#28a745; }
+.terlambat{ background:#ffc107; color:black; }
+.bolos{ background:#dc3545; }
+.sakit{ background:#fd7e14; }
+.default{ background:#cfd8dc; color:black; }
 
-.profile img{
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background:#ddd;
-}
-
-.profile-info h3{
-    font-size:16px;
-    font-weight:600;
-}
-
-.profile-info p{
-    font-size:13px;
-    color:#666;
-}
-
-/* MENU GRID */
-.menu-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-}
-
-.menu-item{
-    background:white;
-    padding:20px;
-    border-radius:18px;
-    text-align:center;
-    box-shadow:0 6px 15px rgba(0,0,0,0.08);
-    transition:0.2s;
+.btn{
+    padding:10px;
+    margin:5px;
+    border:none;
+    border-radius:20px;
+    width:140px;
+    color:white;
     cursor:pointer;
 }
 
-.menu-item:hover{
-    transform:translateY(-5px);
-}
+.btn-hadir{ background:#007bff; }
+.btn-sakit{ background:#ff8800; }
 
-.menu-item i{
-    font-size:28px;
-    margin-bottom:10px;
-    color:#3a8dff;
-}
-
-.menu-item p{
-    font-size:13px;
-    font-weight:500;
-}
-
-/* STATUS ABSENSI */
-.status-tepat{
-    color:green;
-    font-weight:600;
-}
-
-.status-bolos{
-    color:red;
-    font-weight:600;
-}
-
-/* BOTTOM NAV */
-.bottom-nav{
+.bottom{
     position:fixed;
     bottom:0;
-    left:0;
     width:100%;
     background:white;
     display:flex;
     justify-content:space-around;
-    padding:12px 0;
-    box-shadow:0 -5px 15px rgba(0,0,0,0.08);
+    padding:10px 0;
+    box-shadow:0 -2px 10px rgba(0,0,0,0.1);
 }
-
-.bottom-nav div{
+.bottom div{
     text-align:center;
-    font-size:12px;
+    font-size:14px;
     cursor:pointer;
-}
-
-.bottom-nav i{
-    font-size:20px;
-    display:block;
 }
 </style>
 </head>
+
 <body>
 
 <div class="header">
-    <h2>SMA-TAS SMAN 1 BIAU</h2>
-    <h1>Dashboard Siswa</h1>
+    <h2>Dashboard Siswa</h2>
 </div>
 
-<div class="info-container">
+<div class="container">
 
-    <div class="card profile">
-        <img src="">
-        <div class="profile-info">
-            <h3 id="namaSiswa">NAMA AQYL</h3>
-            <p id="kelasSiswa">KELAS XII COKRO</p>
-        </div>
-    </div>
+<div class="card">
+    <div class="nama" id="namaSiswa"></div>
+    <div class="kelas" id="kelasSiswa"></div>
+    <div class="jam" id="jamSekarang"></div>
+    <div id="tanggalSekarang"></div>
+</div>
 
-    <div class="card time-box">
-        <h1 id="jamSekarang">00:00</h1>
-        <p id="tanggalSekarang">Tanggal</p>
-    </div>
+<div class="card">
+    <div>Status Kehadiran</div>
+    <div class="status" id="statusHari"></div>
+    <button class="btn btn-hadir" onclick="absen('hadir')">HADIR</button>
+    <button class="btn btn-sakit" onclick="absen('sakit')">SAKIT</button>
 
-    <div class="card">
-        <h3>Status Kehadiran</h3>
-        <p id="statusKeluar" class="status-tepat">HADIR</p>
-    </div>
-
-    <div class="menu-grid">
-        <div class="menu-item">
-            <i>📋</i>
-            <p>Absensi</p>
-        </div>
-        <div class="menu-item">
-            <i>📊</i>
-            <p>Riwayat</p>
-        </div>
-        <div class="menu-item">
-            <i>📅</i>
-            <p>Jadwal</p>
-        </div>
-        <div class="menu-item">
-            <i>🏆</i>
-            <p>Prestasi</p>
-        </div>
-        <div class="menu-item">
-            <i>ℹ️</i>
-            <p>Info Sekolah</p>
-        </div>
-        <div class="menu-item">
-            <i>⚙️</i>
-            <p>Pengaturan</p>
-        </div>
-    </div>
+    <div class="calendar" id="calendar"></div>
+</div>
 
 </div>
 
-<div class="bottom-nav">
-    <div>🏠<span>Beranda</span></div>
-    <div>👤<span>Profil</span></div>
-    <div>⚙️<span>Setting</span></div>
+<div class="bottom">
+    <div onclick="tampilBeranda()">Beranda</div>
+    <div onclick="tampilProfil()">Profil</div>
+    <div onclick="tampilSetting()">Setting</div>
 </div>
 
 <script>
+
+// CEK ROLE
+if(localStorage.getItem("role") !== "siswa"){
+    window.location.href="index.html";
+}
+
+// AMBIL DATA KARTU
+document.getElementById("namaSiswa").innerText = localStorage.getItem("nama");
+document.getElementById("kelasSiswa").innerText = localStorage.getItem("kelas");
+
 // JAM REALTIME
 function updateJam(){
     const now = new Date();
     document.getElementById("jamSekarang").innerText =
-        now.getHours().toString().padStart(2,'0') + ":" +
-        now.getMinutes().toString().padStart(2,'0');
-
+        now.toLocaleTimeString("id-ID");
     document.getElementById("tanggalSekarang").innerText =
-        now.toLocaleDateString("id-ID", {
+        now.toLocaleDateString("id-ID",{
             weekday:'long',
             day:'numeric',
             month:'long',
@@ -240,6 +157,117 @@ function updateJam(){
 }
 setInterval(updateJam,1000);
 updateJam();
+
+// ABSENSI SYSTEM
+const now = new Date();
+const today = now.getDate();
+const bulan = now.getMonth();
+const tahun = now.getFullYear();
+
+function absen(jenis){
+
+    let statusFinal = jenis;
+
+    if(jenis==="hadir"){
+        const menitSekarang = now.getHours()*60 + now.getMinutes();
+        const batas = 7*60 + 15;
+        if(menitSekarang > batas){
+            statusFinal = "terlambat";
+        } else {
+            statusFinal = "hadir";
+        }
+    }
+
+    localStorage.setItem(
+        "absen_"+today+"_"+bulan+"_"+tahun,
+        JSON.stringify({status:statusFinal})
+    );
+
+    cekStatus();
+    loadCalendar();
+}
+
+function cekStatus(){
+    const data = JSON.parse(localStorage.getItem(
+        "absen_"+today+"_"+bulan+"_"+tahun
+    ));
+
+    const status = document.getElementById("statusHari");
+
+    if(!data){
+        status.innerText="Belum Absen";
+        status.style.color="black";
+        return;
+    }
+
+    if(data.status==="hadir"){
+        status.innerText="HADIR";
+        status.style.color="green";
+    }
+
+    if(data.status==="terlambat"){
+        status.innerText="TERLAMBAT";
+        status.style.color="orange";
+    }
+
+    if(data.status==="bolos"){
+        status.innerText="BOLOS";
+        status.style.color="red";
+    }
+
+    if(data.status==="sakit"){
+        status.innerText="SAKIT";
+        status.style.color="#ff8800";
+    }
+}
+
+function loadCalendar(){
+    const cal = document.getElementById("calendar");
+    cal.innerHTML="";
+    const total = new Date(tahun,bulan+1,0).getDate();
+
+    for(let i=1;i<=total;i++){
+        const div=document.createElement("div");
+        div.classList.add("day");
+
+        const data=JSON.parse(localStorage.getItem(
+            "absen_"+i+"_"+bulan+"_"+tahun
+        ));
+
+        if(data){
+            div.classList.add(data.status);
+        }else if(i<today){
+            div.classList.add("bolos");
+            localStorage.setItem(
+                "absen_"+i+"_"+bulan+"_"+tahun,
+                JSON.stringify({status:"bolos"})
+            );
+        }else{
+            div.classList.add("default");
+        }
+
+        div.innerText=i;
+        cal.appendChild(div);
+    }
+}
+
+cekStatus();
+loadCalendar();
+
+// MENU BAWAH
+function tampilBeranda(){
+    alert("Beranda Aktif");
+}
+
+function tampilProfil(){
+    alert("Nama: "+localStorage.getItem("nama")+
+    "\nKelas: "+localStorage.getItem("kelas"));
+}
+
+function tampilSetting(){
+    alert("Pengaturan UI, Bahasa, Suara");
+}
+
 </script>
 
 </body>
